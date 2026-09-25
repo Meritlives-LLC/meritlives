@@ -1,0 +1,31 @@
+<?php
+
+// Merge these middleware aliases/configuration into your existing bootstrap/app.php.
+// Do not replace an existing Laravel bootstrap file blindly.
+
+use App\Http\Middleware\ForceJson;
+use App\Http\Middleware\SecurityHeaders;
+use Illuminate\Foundation\Application;
+use Illuminate\Foundation\Configuration\Middleware;
+
+return Application::configure(basePath: dirname(__DIR__))
+    ->withRouting(
+        web: __DIR__.'/../routes/web.php',
+        api: __DIR__.'/../routes/api.php',
+        commands: __DIR__.'/../routes/console.php',
+        health: '/up',
+    )
+    ->withMiddleware(function (Middleware $middleware) {
+        $middleware->alias([
+            'force.json' => ForceJson::class,
+            'security.headers' => SecurityHeaders::class,
+        ]);
+
+        $middleware->append(SecurityHeaders::class);
+        $middleware->api(append: [
+            ForceJson::class,
+        ]);
+    })
+    ->withExceptions(function ($exceptions) {
+        //
+    })->create();
