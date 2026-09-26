@@ -64,6 +64,24 @@ return [
             ]) : [],
         ],
 
+        // Read-only connection to the old WordPress database, used only by
+        // `php artisan news:import-wordpress`. Leave WP_DB_* unset if you're
+        // not running that command.
+        'wordpress' => [
+            'driver' => 'mysql',
+            'host' => env('WP_DB_HOST', '127.0.0.1'),
+            'port' => env('WP_DB_PORT', '3306'),
+            'database' => env('WP_DB_DATABASE', 'wordpress'),
+            'username' => env('WP_DB_USERNAME', 'root'),
+            'password' => env('WP_DB_PASSWORD', ''),
+            'unix_socket' => env('WP_DB_SOCKET', ''),
+            'charset' => env('WP_DB_CHARSET', 'utf8mb4'),
+            'collation' => env('WP_DB_COLLATION', 'utf8mb4_unicode_ci'),
+            'prefix' => env('WP_DB_PREFIX', 'wp_'),
+            'prefix_indexes' => true,
+            'strict' => false,
+        ],
+
         'mariadb' => [
             'driver' => 'mariadb',
             'url' => env('DB_URL'),

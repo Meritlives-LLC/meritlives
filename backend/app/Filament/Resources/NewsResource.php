@@ -25,6 +25,7 @@ class NewsResource extends Resource
             Forms\Components\Select::make('category_id')
                 ->relationship('category','name')->searchable()->preload(),
             Forms\Components\Textarea::make('excerpt')->rows(4)->columnSpanFull(),
+            Forms\Components\RichEditor::make('content')->columnSpanFull(),
             Forms\Components\TextInput::make('source_name')->required(),
             Forms\Components\TextInput::make('source_url')->url()->required(),
             Forms\Components\TextInput::make('image_url')->url(),

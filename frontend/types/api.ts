@@ -55,6 +55,7 @@ export interface NewsItem {
     url?: string | null;
   };
   image_url?: string | null;
+  content?: string | null;
   category?: Category | null;
   published_at?: string | null;
   featured: boolean;

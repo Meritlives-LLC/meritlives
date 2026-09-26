@@ -15,6 +15,12 @@ export default async function NewsDetailPage({
         <p className="text-sm opacity-60">{item.category?.name || "News"}</p>
         <h1 className="mt-3 text-5xl font-bold">{item.title}</h1>
         {item.excerpt && <p className="mt-5 text-xl opacity-75">{item.excerpt}</p>}
+        {item.content && (
+          <div
+            className="prose prose-lg mt-8 max-w-none"
+            dangerouslySetInnerHTML={{ __html: item.content }}
+          />
+        )}
         {item.source?.url && (
           <a
             href={item.source.url}

@@ -14,6 +14,7 @@ class NewsResource extends JsonResource
             'title' => $this->title,
             'slug' => $this->slug,
             'excerpt' => $this->excerpt,
+            'content' => $this->when($request->routeIs('*.show'), $this->content),
             'source' => [
                 'name' => $this->source_name,
                 'url' => $this->source_url,
