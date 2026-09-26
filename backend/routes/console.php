@@ -9,7 +9,4 @@ Artisan::command('inspire', function () {
 })->purpose('Display an inspiring quote');
 
 // Keep scheduled work explicit and observable.
-// Add production jobs here as they are introduced.
-//
-// Example:
-// Schedule::command('news:sync')->hourly()->withoutOverlapping();
+Schedule::command('news:sync-rss')->hourly()->withoutOverlapping();
