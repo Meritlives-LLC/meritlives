@@ -1,40 +1,201 @@
 import Link from "next/link";
 
+const capabilities = [
+  {
+    number: "01",
+    title: "Digital products",
+    description:
+      "Thoughtful digital experiences designed around real people and practical needs.",
+  },
+  {
+    number: "02",
+    title: "Software engineering",
+    description:
+      "Reliable web and software solutions built with clarity, performance and purpose.",
+  },
+  {
+    number: "03",
+    title: "Education",
+    description:
+      "Learning experiences that make useful technology and skills more accessible.",
+  },
+  {
+    number: "04",
+    title: "Innovation",
+    description:
+      "New ideas explored through technology, experimentation and practical problem-solving.",
+  },
+];
+
 export default function Hero() {
   return (
-    <section className="relative overflow-hidden">
-      <div className="absolute inset-0 -z-10 ml-grid-bg opacity-50" />
-      <div className="absolute -right-32 -top-32 -z-10 h-96 w-96 rounded-full bg-blue-100 blur-3xl" />
-      <div className="ml-container grid min-h-[720px] items-center gap-14 py-24 lg:grid-cols-[1.1fr_.9fr]">
-        <div>
-          <p className="ml-eyebrow">Technology · Innovation · Impact</p>
-          <h1 className="ml-display mt-6 max-w-5xl">
-            Building technology that <span className="ml-gradient">moves people forward.</span>
-          </h1>
-          <p className="mt-7 max-w-2xl text-lg leading-8 text-slate-600">
-            MERITLIVES LLC combines technology, digital innovation, education and practical solutions to help people and organisations turn ideas into measurable progress.
-          </p>
-          <div className="mt-9 flex flex-wrap gap-3">
-            <Link href="/products" className="ml-btn ml-btn-primary">Explore our solutions →</Link>
-            <Link href="/about" className="ml-btn ml-btn-light">Who we are</Link>
+    <section className="ml-hero-bg relative overflow-hidden border-b border-white/[0.08]">
+      {/* Decorative geometry */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 overflow-hidden"
+      >
+        {/* Lime glow */}
+        <div className="absolute -right-40 -top-40 h-[520px] w-[520px] rounded-full bg-[#c8ff00]/[0.06] blur-3xl" />
+
+        {/* Large geometric ring */}
+        <div className="absolute -right-32 top-24 h-[560px] w-[560px] rounded-full border border-[#c8ff00]/[0.10]" />
+
+        <div className="absolute -right-12 top-44 h-[420px] w-[420px] rounded-full border border-white/[0.06]" />
+
+        {/* Grid */}
+        <div
+          className="absolute inset-0 opacity-50"
+          style={{
+            backgroundImage:
+              "linear-gradient(rgba(255,255,255,0.035) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.035) 1px, transparent 1px)",
+            backgroundSize: "64px 64px",
+            maskImage:
+              "linear-gradient(to bottom, black 0%, black 45%, transparent 100%)",
+            WebkitMaskImage:
+              "linear-gradient(to bottom, black 0%, black 45%, transparent 100%)",
+          }}
+        />
+      </div>
+
+      <div className="ml-container relative z-10">
+        <div className="grid min-h-[760px] items-center gap-16 py-20 lg:grid-cols-[1.1fr_0.9fr] lg:gap-24 lg:py-28">
+          {/* =====================================================
+              LEFT
+          ====================================================== */}
+          <div className="max-w-4xl">
+            <div className="ml-eyebrow">
+              Technology · Innovation · Impact
+            </div>
+
+            <h1 className="mt-7 ml-display text-white">
+              Building
+              <br />
+              technology
+              <br />
+              <span className="text-[#c8ff00]">
+                that moves
+              </span>
+              <br />
+              people forward.
+            </h1>
+
+            <p className="ml-body-lg mt-9 max-w-2xl text-white/65">
+              Meritlives brings together technology, digital innovation,
+              education and practical problem-solving to help people and
+              organisations turn ideas into meaningful progress.
+            </p>
+
+            {/* CTA */}
+            <div className="mt-10 flex flex-wrap gap-3">
+              <Link
+                href="/products"
+                className="ml-btn ml-btn-lime"
+              >
+                Explore our work
+                <span aria-hidden="true">→</span>
+              </Link>
+
+              <Link
+                href="/about"
+                className="ml-btn ml-btn-ghost"
+              >
+                Who we are
+              </Link>
+            </div>
+
+            {/* Location / company */}
+            <div className="mt-14 flex flex-wrap items-center gap-x-8 gap-y-3 font-mono text-[11px] uppercase tracking-[0.08em] text-white/40">
+              <span>Abuja, Nigeria</span>
+
+              <span className="hidden h-1 w-1 rounded-full bg-[#c8ff00] sm:block" />
+
+              <span>A KGC Meritzone Consults Ltd company</span>
+            </div>
           </div>
-        </div>
-        <div className="relative">
-          <div className="ml-card overflow-hidden bg-slate-950 p-8 text-white shadow-2xl">
-            <div className="flex items-center justify-between border-b border-white/10 pb-5">
-              <span className="text-sm font-semibold">MERITLIVES / SYSTEM</span>
-              <span className="rounded-full bg-emerald-400/15 px-3 py-1 text-xs text-emerald-300">LIVE</span>
-            </div>
-            <div className="py-10">
-              <div className="text-6xl font-black tracking-tight">01</div>
-              <p className="mt-3 text-slate-400">Ideas → Technology → Capability → Impact</p>
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              {["Digital", "Software", "AI", "Education"].map(x => <div key={x} className="rounded-xl border border-white/10 bg-white/5 p-4 text-sm font-semibold">{x}</div>)}
+
+          {/* =====================================================
+              RIGHT — WHAT WE BUILD
+          ====================================================== */}
+          <div className="relative">
+            {/* Glow behind card */}
+            <div
+              aria-hidden="true"
+              className="absolute -inset-6 rounded-[36px] bg-[#c8ff00]/[0.035] blur-3xl"
+            />
+
+            <div className="ml-card relative overflow-hidden !p-0">
+              {/* Card header */}
+              <div className="border-b border-white/[0.10] px-7 py-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="font-mono text-[11px] font-medium uppercase tracking-[0.16em] text-[#c8ff00]">
+                      What we build
+                    </p>
+
+                    <p className="mt-2 text-sm text-white/50">
+                      Practical solutions with purpose.
+                    </p>
+                  </div>
+
+                  <div className="flex h-10 w-10 items-center justify-center rounded-full border border-[#c8ff00]/20 bg-[#c8ff00]/[0.08] font-mono text-sm font-bold text-[#c8ff00]">
+                    M
+                  </div>
+                </div>
+              </div>
+
+              {/* Capabilities */}
+              <div>
+                {capabilities.map((item) => (
+                  <div
+                    key={item.number}
+                    className="group flex gap-5 border-b border-white/[0.08] px-7 py-7 transition-colors duration-200 hover:bg-white/[0.035]"
+                  >
+                    {/* Number */}
+                    <span className="pt-1 font-mono text-[11px] font-medium text-white/25 transition-colors duration-200 group-hover:text-[#c8ff00]">
+                      {item.number}
+                    </span>
+
+                    {/* Content */}
+                    <div>
+                      <h2 className="font-[var(--font-heading)] text-base font-semibold tracking-tight text-white">
+                        {item.title}
+                      </h2>
+
+                      <p className="mt-2 text-sm leading-6 text-white/50">
+                        {item.description}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Card footer */}
+              <div className="bg-white/[0.025] px-7 py-5">
+                <Link
+                  href="/services"
+                  className="group inline-flex items-center gap-2 font-mono text-xs uppercase tracking-[0.08em] text-white/65 transition-colors duration-200 hover:text-[#c8ff00]"
+                >
+                  Discover our capabilities
+
+                  <span
+                    aria-hidden="true"
+                    className="transition-transform duration-200 group-hover:translate-x-1"
+                  >
+                    →
+                  </span>
+                </Link>
+              </div>
             </div>
           </div>
         </div>
       </div>
+
+      {/* Bottom technical line */}
+      <div
+        aria-hidden="true"
+        className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[#c8ff00]/30 to-transparent"
+      />
     </section>
   );
 }
