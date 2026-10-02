@@ -1,29 +1,1864 @@
 @import "tailwindcss";
 @plugin "@tailwindcss/typography";
 
+/* =========================================================
+   MERITLIVES — GLOBAL DESIGN SYSTEM
+   Direction:
+   - Premium technology company
+   - Dark / near-black interface
+   - White typography
+   - Electric lime accent
+   - Technical grid details
+   - Sharp editorial layouts
+   - Minimal rounded corners
+========================================================= */
+
 :root {
-  --ml-primary: #172554;
-  --ml-accent: #2563eb;
-  --ml-ink: #0f172a;
-  --ml-muted: #64748b;
-  --ml-surface: #f8fafc;
+  /* -------------------------------------------------------
+     COLOUR SYSTEM
+  ------------------------------------------------------- */
+
+  --ml-bg: #080909;
+  --ml-bg-soft: #0d0e0e;
+  --ml-bg-elevated: #101111;
+
+  --ml-surface: #121313;
+  --ml-surface-2: #181919;
+  --ml-surface-3: #202121;
+
+  --ml-white: #ffffff;
+  --ml-ink: #f5f5f2;
+  --ml-muted: #999b96;
+  --ml-muted-light: #c4c6c0;
+
+  --ml-lime: #c8ff00;
+  --ml-lime-soft: #ddff68;
+  --ml-lime-dark: #9bc700;
+
+  --ml-border: rgba(255, 255, 255, 0.1);
+  --ml-border-strong: rgba(255, 255, 255, 0.18);
+  --ml-border-soft: rgba(255, 255, 255, 0.06);
+
+  --ml-overlay: rgba(8, 9, 9, 0.82);
+
+  /* Legacy compatibility */
+  --ml-primary: #ffffff;
+  --ml-accent: #c8ff00;
+  --ml-violet: #c8ff00;
+
+  /* -------------------------------------------------------
+     TYPOGRAPHY
+  ------------------------------------------------------- */
+
+  --font-body: var(--font-inter), Inter, Arial, sans-serif;
+  --font-heading: var(--font-grotesk), "Space Grotesk", Inter, sans-serif;
+  --font-code: var(--font-mono), "JetBrains Mono", monospace;
+
+  /* -------------------------------------------------------
+     LAYOUT
+  ------------------------------------------------------- */
+
+  --ml-container-width: 1240px;
+  --ml-container-padding: 24px;
+
+  --ml-section-padding: 110px;
+  --ml-section-padding-sm: 80px;
+
+  /* -------------------------------------------------------
+     EFFECTS
+  ------------------------------------------------------- */
+
+  --ml-radius-sm: 6px;
+  --ml-radius-md: 10px;
+  --ml-radius-lg: 16px;
+  --ml-radius-xl: 24px;
+
+  --ml-shadow:
+    0 25px 70px rgba(0, 0, 0, 0.35);
+
+  --ml-transition:
+    180ms cubic-bezier(0.22, 1, 0.36, 1);
+
+  color-scheme: dark;
 }
 
-html { scroll-behavior: smooth; }
-body { color: var(--ml-ink); background: white; }
-::selection { background: #dbeafe; color: var(--ml-ink); }
 
-.ml-container { width: min(1180px, calc(100% - 40px)); margin-inline: auto; }
-.ml-section { padding-block: 88px; }
-.ml-eyebrow { font-size: .75rem; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--ml-accent); }
-.ml-display { font-size: clamp(2.6rem, 6vw, 5.8rem); line-height: .98; letter-spacing: -.045em; font-weight: 800; }
-.ml-gradient { background: linear-gradient(110deg, #172554 0%, #2563eb 55%, #7c3aed 100%); -webkit-background-clip: text; background-clip: text; color: transparent; }
-.ml-card { border: 1px solid #e2e8f0; border-radius: 24px; background: rgba(255,255,255,.9); transition: transform .25s ease, box-shadow .25s ease, border-color .25s ease; }
-.ml-card:hover { transform: translateY(-4px); box-shadow: 0 20px 50px rgba(15,23,42,.09); border-color: #bfdbfe; }
-.ml-btn { display:inline-flex; align-items:center; justify-content:center; gap:.5rem; border-radius:999px; padding:.85rem 1.2rem; font-weight:700; transition:.2s ease; }
-.ml-btn-primary { background:#172554; color:white; }
-.ml-btn-primary:hover { background:#1e3a8a; transform:translateY(-1px); }
-.ml-btn-light { background:white; color:#172554; border:1px solid #dbeafe; }
-.ml-btn-light:hover { border-color:#93c5fd; }
-.ml-grid-bg { background-image: linear-gradient(#e2e8f0 1px, transparent 1px), linear-gradient(90deg, #e2e8f0 1px, transparent 1px); background-size: 48px 48px; }
-@media (prefers-reduced-motion: reduce) { html { scroll-behavior:auto; } *, *::before, *::after { animation-duration:.01ms!important; transition-duration:.01ms!important; } }
+/* =========================================================
+   RESET
+========================================================= */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+  background: var(--ml-bg);
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+
+  background:
+    radial-gradient(
+      circle at 50% -20%,
+      rgba(200, 255, 0, 0.045),
+      transparent 35%
+    ),
+    var(--ml-bg);
+
+  color: var(--ml-ink);
+
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.6;
+
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+body,
+button,
+input,
+textarea,
+select {
+  font-family: var(--font-body);
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+img,
+svg,
+video {
+  display: block;
+  max-width: 100%;
+}
+
+img {
+  height: auto;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+::selection {
+  background: var(--ml-lime);
+  color: #080909;
+}
+
+
+/* =========================================================
+   SCROLLBAR
+========================================================= */
+
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--ml-bg);
+}
+
+::-webkit-scrollbar-thumb {
+  background: #303130;
+  border-radius: 999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--ml-lime);
+}
+
+
+/* =========================================================
+   TYPOGRAPHY
+========================================================= */
+
+.ml-display,
+.ml-heading-xl,
+.ml-heading-lg,
+.ml-heading-md,
+.ml-section-title,
+.ml-card-title,
+.ml-service-title,
+.ml-footer-title {
+  font-family: var(--font-heading);
+  letter-spacing: -0.045em;
+}
+
+.ml-display {
+  font-size: clamp(3.5rem, 8vw, 8.5rem);
+  font-weight: 600;
+  line-height: 0.9;
+  letter-spacing: -0.065em;
+}
+
+.ml-heading-xl {
+  font-size: clamp(3rem, 6vw, 6.5rem);
+  font-weight: 600;
+  line-height: 0.94;
+}
+
+.ml-heading-lg {
+  font-size: clamp(2.5rem, 5vw, 5rem);
+  font-weight: 600;
+  line-height: 0.98;
+}
+
+.ml-heading-md {
+  font-size: clamp(1.8rem, 3vw, 3rem);
+  font-weight: 600;
+  line-height: 1.05;
+}
+
+.ml-section-title {
+  font-size: clamp(2rem, 4vw, 4rem);
+  font-weight: 600;
+  line-height: 1;
+}
+
+.ml-body-lg {
+  max-width: 720px;
+
+  color: var(--ml-muted-light);
+
+  font-size: clamp(1.05rem, 1.5vw, 1.25rem);
+  line-height: 1.7;
+}
+
+.ml-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+
+  color: var(--ml-lime);
+
+  font-family: var(--font-code);
+  font-size: 0.7rem;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.ml-eyebrow::before {
+  content: "";
+
+  width: 7px;
+  height: 7px;
+
+  border-radius: 50%;
+
+  background: var(--ml-lime);
+
+  box-shadow:
+    0 0 0 4px rgba(200, 255, 0, 0.08);
+}
+
+
+/* =========================================================
+   CONTAINERS
+========================================================= */
+
+.ml-container {
+  width: min(
+    var(--ml-container-width),
+    calc(100% - (var(--ml-container-padding) * 2))
+  );
+
+  margin-inline: auto;
+}
+
+.ml-section {
+  position: relative;
+
+  padding-block: var(--ml-section-padding);
+}
+
+.ml-section-sm {
+  padding-block: var(--ml-section-padding-sm);
+}
+
+.ml-section-lg {
+  padding-block: 140px;
+}
+
+.ml-section-xl {
+  padding-block: 180px;
+}
+
+
+/* =========================================================
+   GLOBAL SECTION DIVIDER
+========================================================= */
+
+.ml-section-divider {
+  width: 100%;
+  height: 1px;
+
+  background: var(--ml-border);
+}
+
+
+/* =========================================================
+   TECHNICAL GRID BACKGROUNDS
+========================================================= */
+
+.ml-grid-bg {
+  position: relative;
+
+  background-color: var(--ml-bg);
+
+  background-image:
+    linear-gradient(
+      rgba(255, 255, 255, 0.035) 1px,
+      transparent 1px
+    ),
+    linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0.035) 1px,
+      transparent 1px
+    );
+
+  background-size: 64px 64px;
+}
+
+.ml-grid-bg::after {
+  content: "";
+
+  position: absolute;
+  inset: 0;
+
+  pointer-events: none;
+
+  background:
+    linear-gradient(
+      to bottom,
+      transparent,
+      rgba(8, 9, 9, 0.95)
+    );
+}
+
+.ml-grid-bg > * {
+  position: relative;
+  z-index: 1;
+}
+
+
+/* =========================================================
+   HERO BACKGROUND
+========================================================= */
+
+.ml-hero-bg {
+  position: relative;
+  overflow: hidden;
+
+  background:
+    radial-gradient(
+      circle at 78% 18%,
+      rgba(200, 255, 0, 0.12),
+      transparent 20%
+    ),
+    radial-gradient(
+      circle at 20% 80%,
+      rgba(255, 255, 255, 0.035),
+      transparent 25%
+    ),
+    var(--ml-bg);
+}
+
+.ml-hero-bg::before {
+  content: "";
+
+  position: absolute;
+  inset: 0;
+
+  pointer-events: none;
+
+  background-image:
+    linear-gradient(
+      rgba(255, 255, 255, 0.025) 1px,
+      transparent 1px
+    ),
+    linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0.025) 1px,
+      transparent 1px
+    );
+
+  background-size: 72px 72px;
+
+  mask-image: linear-gradient(
+    to bottom,
+    black,
+    transparent 90%
+  );
+}
+
+.ml-hero-bg > * {
+  position: relative;
+  z-index: 1;
+}
+
+
+/* =========================================================
+   HERO GEOMETRY
+========================================================= */
+
+.ml-hero-shape {
+  position: absolute;
+
+  width: 480px;
+  height: 480px;
+
+  border: 1px solid rgba(200, 255, 0, 0.18);
+
+  transform: rotate(45deg);
+
+  pointer-events: none;
+
+  opacity: 0.7;
+}
+
+.ml-hero-shape::before,
+.ml-hero-shape::after {
+  content: "";
+
+  position: absolute;
+  inset: 48px;
+
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.ml-hero-shape::after {
+  inset: 96px;
+
+  border-color: rgba(200, 255, 0, 0.1);
+}
+
+
+/* =========================================================
+   DARK BACKGROUNDS
+========================================================= */
+
+.ml-dark-bg {
+  position: relative;
+
+  overflow: hidden;
+
+  background:
+    radial-gradient(
+      circle at 80% 10%,
+      rgba(200, 255, 0, 0.07),
+      transparent 28%
+    ),
+    var(--ml-bg-soft);
+}
+
+.ml-dark-bg::before {
+  content: "";
+
+  position: absolute;
+  inset: 0;
+
+  background-image:
+    linear-gradient(
+      rgba(255, 255, 255, 0.025) 1px,
+      transparent 1px
+    ),
+    linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0.025) 1px,
+      transparent 1px
+    );
+
+  background-size: 70px 70px;
+
+  pointer-events: none;
+}
+
+.ml-dark-bg > * {
+  position: relative;
+  z-index: 1;
+}
+
+
+/* =========================================================
+   EDITORIAL BACKGROUND
+========================================================= */
+
+.ml-editorial-bg {
+  position: relative;
+  overflow: hidden;
+
+  background: var(--ml-bg-soft);
+}
+
+.ml-editorial-bg::before {
+  content: "";
+
+  position: absolute;
+
+  width: 700px;
+  height: 700px;
+
+  top: -320px;
+  right: -180px;
+
+  border: 1px solid rgba(255, 255, 255, 0.08);
+
+  border-radius: 50%;
+}
+
+.ml-editorial-bg::after {
+  content: "";
+
+  position: absolute;
+
+  width: 500px;
+  height: 500px;
+
+  bottom: -300px;
+  left: -200px;
+
+  border: 1px solid rgba(200, 255, 0, 0.1);
+
+  border-radius: 50%;
+}
+
+
+/* =========================================================
+   LIME BACKGROUND
+========================================================= */
+
+.ml-lime-bg {
+  position: relative;
+  overflow: hidden;
+
+  background: var(--ml-lime);
+
+  color: #080909;
+}
+
+.ml-lime-bg::after {
+  content: "";
+
+  position: absolute;
+
+  width: 450px;
+  height: 450px;
+
+  right: -150px;
+  top: -180px;
+
+  border: 1px solid rgba(8, 9, 9, 0.15);
+
+  border-radius: 50%;
+}
+
+
+/* =========================================================
+   DECORATIVE CIRCLES
+========================================================= */
+
+.ml-bg-circle,
+.ml-bg-circle-lime {
+  position: absolute;
+
+  border-radius: 50%;
+
+  pointer-events: none;
+}
+
+.ml-bg-circle {
+  border: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.ml-bg-circle-lime {
+  border: 1px solid rgba(200, 255, 0, 0.14);
+}
+
+
+/* =========================================================
+   CARDS
+========================================================= */
+
+.ml-card {
+  position: relative;
+
+  padding: 28px;
+
+  border: 1px solid var(--ml-border);
+
+  border-radius: var(--ml-radius-lg);
+
+  background: var(--ml-surface);
+
+  box-shadow: var(--ml-shadow);
+
+  transition:
+    border-color var(--ml-transition),
+    transform var(--ml-transition),
+    background var(--ml-transition);
+}
+
+.ml-card:hover {
+  border-color: var(--ml-border-strong);
+
+  background: var(--ml-surface-2);
+
+  transform: translateY(-3px);
+}
+
+.ml-card-soft {
+  position: relative;
+
+  padding: 28px;
+
+  border: 1px solid var(--ml-border-soft);
+
+  border-radius: var(--ml-radius-lg);
+
+  background: rgba(255, 255, 255, 0.025);
+}
+
+.ml-card-blue {
+  position: relative;
+
+  padding: 28px;
+
+  border: 1px solid rgba(200, 255, 0, 0.18);
+
+  border-radius: var(--ml-radius-lg);
+
+  background:
+    linear-gradient(
+      145deg,
+      rgba(200, 255, 0, 0.08),
+      rgba(255, 255, 255, 0.025)
+    );
+}
+
+
+/* =========================================================
+   PRODUCT CARDS
+========================================================= */
+
+.ml-product-card {
+  position: relative;
+
+  min-height: 300px;
+
+  padding: 30px;
+
+  overflow: hidden;
+
+  border: 1px solid var(--ml-border);
+
+  border-radius: var(--ml-radius-lg);
+
+  background: var(--ml-surface);
+
+  transition:
+    transform var(--ml-transition),
+    border-color var(--ml-transition),
+    background var(--ml-transition);
+}
+
+.ml-product-card::after {
+  content: "↗";
+
+  position: absolute;
+
+  right: 28px;
+  bottom: 24px;
+
+  color: rgba(255, 255, 255, 0.35);
+
+  font-size: 1.4rem;
+
+  transition:
+    color var(--ml-transition),
+    transform var(--ml-transition);
+}
+
+.ml-product-card:hover {
+  border-color: rgba(200, 255, 0, 0.35);
+
+  background:
+    radial-gradient(
+      circle at 100% 0%,
+      rgba(200, 255, 0, 0.08),
+      transparent 35%
+    ),
+    var(--ml-surface);
+
+  transform: translateY(-5px);
+}
+
+.ml-product-card:hover::after {
+  color: var(--ml-lime);
+
+  transform: translate(3px, -3px);
+}
+
+
+/* =========================================================
+   SERVICE LIST
+========================================================= */
+
+.ml-service-item {
+  display: grid;
+
+  grid-template-columns: 70px 1fr auto;
+
+  gap: 30px;
+
+  align-items: center;
+
+  padding-block: 30px;
+
+  border-top: 1px solid var(--ml-border);
+
+  transition:
+    padding-left var(--ml-transition),
+    background var(--ml-transition);
+}
+
+.ml-service-item:last-child {
+  border-bottom: 1px solid var(--ml-border);
+}
+
+.ml-service-item:hover {
+  padding-left: 12px;
+}
+
+.ml-service-number {
+  color: var(--ml-lime);
+
+  font-family: var(--font-code);
+
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+}
+
+.ml-service-title {
+  margin: 0;
+
+  color: var(--ml-white);
+
+  font-size: clamp(1.5rem, 3vw, 2.4rem);
+
+  font-weight: 500;
+}
+
+.ml-service-description {
+  max-width: 560px;
+
+  margin-top: 8px;
+
+  color: var(--ml-muted);
+
+  font-size: 0.95rem;
+  line-height: 1.7;
+}
+
+.ml-service-arrow {
+  color: var(--ml-muted);
+
+  font-size: 1.4rem;
+
+  transition:
+    color var(--ml-transition),
+    transform var(--ml-transition);
+}
+
+.ml-service-item:hover .ml-service-arrow {
+  color: var(--ml-lime);
+
+  transform: translate(4px, -4px);
+}
+
+
+/* =========================================================
+   STATS
+========================================================= */
+
+.ml-stat {
+  padding: 30px 0;
+
+  border-top: 1px solid var(--ml-border);
+}
+
+.ml-stat-number {
+  display: block;
+
+  color: var(--ml-white);
+
+  font-family: var(--font-heading);
+
+  font-size: clamp(2.5rem, 5vw, 5rem);
+
+  font-weight: 600;
+
+  line-height: 0.95;
+
+  letter-spacing: -0.06em;
+}
+
+.ml-stat-label {
+  display: block;
+
+  margin-top: 12px;
+
+  color: var(--ml-muted);
+
+  font-family: var(--font-code);
+
+  font-size: 0.68rem;
+
+  letter-spacing: 0.12em;
+
+  text-transform: uppercase;
+}
+
+
+/* =========================================================
+   TEAM
+========================================================= */
+
+.ml-team-card {
+  position: relative;
+
+  padding: 28px;
+
+  border: 1px solid var(--ml-border);
+
+  background: var(--ml-surface);
+
+  transition:
+    transform var(--ml-transition),
+    border-color var(--ml-transition);
+}
+
+.ml-team-card:hover {
+  border-color: rgba(200, 255, 0, 0.3);
+
+  transform: translateY(-4px);
+}
+
+.ml-team-image {
+  width: 176px;
+  height: 176px;
+
+  margin-bottom: 24px;
+
+  overflow: hidden;
+
+  border: 1px solid rgba(255, 255, 255, 0.12);
+
+  border-radius: 50%;
+
+  background: var(--ml-surface-3);
+}
+
+.ml-team-image img {
+  width: 100%;
+  height: 100%;
+
+  object-fit: cover;
+
+  transition: transform 500ms ease;
+}
+
+.ml-team-card:hover .ml-team-image img {
+  transform: scale(1.04);
+}
+
+
+/* =========================================================
+   MODAL
+========================================================= */
+
+.ml-modal {
+  position: fixed;
+
+  inset: 0;
+
+  z-index: 100;
+
+  display: flex;
+
+  align-items: center;
+  justify-content: center;
+
+  padding: 24px;
+
+  background: rgba(0, 0, 0, 0.78);
+
+  backdrop-filter: blur(12px);
+
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.ml-modal-panel {
+  width: min(680px, 100%);
+
+  max-height: min(760px, 90vh);
+
+  overflow-y: auto;
+
+  padding: 40px;
+
+  border: 1px solid var(--ml-border-strong);
+
+  border-radius: var(--ml-radius-xl);
+
+  background: var(--ml-surface);
+
+  box-shadow:
+    0 40px 120px rgba(0, 0, 0, 0.65);
+}
+
+
+/* =========================================================
+   BUTTONS
+========================================================= */
+
+.ml-btn {
+  display: inline-flex;
+
+  align-items: center;
+  justify-content: center;
+
+  gap: 10px;
+
+  min-height: 48px;
+
+  padding: 0 20px;
+
+  border: 1px solid transparent;
+
+  border-radius: 999px;
+
+  font-size: 0.85rem;
+
+  font-weight: 600;
+
+  line-height: 1;
+
+  transition:
+    transform var(--ml-transition),
+    background var(--ml-transition),
+    color var(--ml-transition),
+    border-color var(--ml-transition);
+}
+
+.ml-btn:hover {
+  transform: translateY(-2px);
+}
+
+.ml-btn-primary,
+.ml-btn-lime {
+  background: var(--ml-lime);
+
+  color: #080909;
+
+  border-color: var(--ml-lime);
+}
+
+.ml-btn-primary:hover,
+.ml-btn-lime:hover {
+  background: var(--ml-lime-soft);
+
+  border-color: var(--ml-lime-soft);
+}
+
+.ml-btn-dark {
+  background: #080909;
+
+  color: #ffffff;
+
+  border-color: rgba(255, 255, 255, 0.14);
+}
+
+.ml-btn-dark:hover {
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.ml-btn-light {
+  background: #ffffff;
+
+  color: #080909;
+
+  border-color: #ffffff;
+}
+
+.ml-btn-light:hover {
+  background: #ededeb;
+
+  border-color: #ededeb;
+}
+
+.ml-btn-ghost {
+  background: transparent;
+
+  color: #ffffff;
+
+  border-color: rgba(255, 255, 255, 0.18);
+}
+
+.ml-btn-ghost:hover {
+  color: var(--ml-lime);
+
+  border-color: rgba(200, 255, 0, 0.45);
+
+  background: rgba(200, 255, 0, 0.05);
+}
+
+
+/* =========================================================
+   FORMS
+========================================================= */
+
+.ml-input,
+.ml-textarea,
+.ml-select {
+  width: 100%;
+
+  border: 1px solid var(--ml-border);
+
+  border-radius: var(--ml-radius-md);
+
+  background: var(--ml-surface);
+
+  color: var(--ml-white);
+
+  outline: none;
+
+  transition:
+    border-color var(--ml-transition),
+    background var(--ml-transition),
+    box-shadow var(--ml-transition);
+}
+
+.ml-input,
+.ml-select {
+  min-height: 52px;
+
+  padding: 0 16px;
+}
+
+.ml-textarea {
+  min-height: 150px;
+
+  padding: 14px 16px;
+
+  resize: vertical;
+}
+
+.ml-input::placeholder,
+.ml-textarea::placeholder {
+  color: #666863;
+}
+
+.ml-input:focus,
+.ml-textarea:focus,
+.ml-select:focus {
+  border-color: rgba(200, 255, 0, 0.55);
+
+  background: var(--ml-surface-2);
+
+  box-shadow:
+    0 0 0 3px rgba(200, 255, 0, 0.08);
+}
+
+
+/* =========================================================
+   CTA
+========================================================= */
+
+.ml-cta {
+  position: relative;
+
+  overflow: hidden;
+
+  padding: 80px;
+
+  border: 1px solid rgba(200, 255, 0, 0.2);
+
+  background:
+    radial-gradient(
+      circle at 85% 15%,
+      rgba(200, 255, 0, 0.12),
+      transparent 25%
+    ),
+    var(--ml-surface);
+}
+
+.ml-cta::before {
+  content: "";
+
+  position: absolute;
+
+  width: 450px;
+  height: 450px;
+
+  right: -180px;
+  bottom: -280px;
+
+  border: 1px solid rgba(200, 255, 0, 0.16);
+
+  border-radius: 50%;
+}
+
+.ml-cta-content {
+  position: relative;
+
+  z-index: 1;
+}
+
+.ml-cta-title {
+  max-width: 850px;
+
+  margin: 0;
+
+  color: var(--ml-white);
+
+  font-family: var(--font-heading);
+
+  font-size: clamp(2.8rem, 6vw, 6rem);
+
+  font-weight: 600;
+
+  line-height: 0.95;
+
+  letter-spacing: -0.06em;
+}
+
+
+/* =========================================================
+   IMAGE FRAME
+========================================================= */
+
+.ml-image-frame {
+  position: relative;
+
+  overflow: hidden;
+
+  border: 1px solid var(--ml-border);
+
+  background: var(--ml-surface);
+}
+
+.ml-image-frame::after {
+  content: "";
+
+  position: absolute;
+
+  inset: 14px;
+
+  border: 1px solid rgba(255, 255, 255, 0.08);
+
+  pointer-events: none;
+}
+
+
+/* =========================================================
+   TAGS
+========================================================= */
+
+.ml-tag {
+  display: inline-flex;
+
+  align-items: center;
+
+  min-height: 30px;
+
+  padding: 0 10px;
+
+  border: 1px solid var(--ml-border);
+
+  border-radius: 999px;
+
+  background: rgba(255, 255, 255, 0.025);
+
+  color: var(--ml-muted-light);
+
+  font-family: var(--font-code);
+
+  font-size: 0.65rem;
+
+  letter-spacing: 0.08em;
+
+  text-transform: uppercase;
+}
+
+.ml-tag-lime {
+  border-color: rgba(200, 255, 0, 0.3);
+
+  background: rgba(200, 255, 0, 0.07);
+
+  color: var(--ml-lime);
+}
+
+
+/* =========================================================
+   RULE / LINE
+========================================================= */
+
+.ml-rule {
+  width: 100%;
+  height: 1px;
+
+  background: var(--ml-border);
+}
+
+.ml-rule-lime {
+  background: rgba(200, 255, 0, 0.3);
+}
+
+
+/* =========================================================
+   MARQUEE
+========================================================= */
+
+.ml-marquee {
+  width: 100%;
+
+  overflow: hidden;
+
+  border-top: 1px solid var(--ml-border);
+  border-bottom: 1px solid var(--ml-border);
+
+  background: var(--ml-bg-soft);
+
+  white-space: nowrap;
+}
+
+.ml-marquee-track {
+  display: inline-flex;
+
+  width: max-content;
+
+  animation: ml-marquee 30s linear infinite;
+}
+
+.ml-marquee-item {
+  display: inline-flex;
+
+  align-items: center;
+
+  gap: 32px;
+
+  padding: 20px 30px;
+
+  color: var(--ml-muted);
+
+  font-family: var(--font-heading);
+
+  font-size: clamp(1.5rem, 3vw, 2.6rem);
+
+  font-weight: 500;
+}
+
+.ml-marquee-item::after {
+  content: "✦";
+
+  color: var(--ml-lime);
+}
+
+@keyframes ml-marquee {
+  from {
+    transform: translateX(0);
+  }
+
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+
+/* =========================================================
+   HEADER
+========================================================= */
+
+header {
+  color: #ffffff;
+}
+
+header a,
+header button {
+  color: #ffffff;
+}
+
+header a:hover,
+header button:hover {
+  color: var(--ml-lime);
+}
+
+header [role="menu"] {
+  color: #ffffff;
+}
+
+header [role="menu"] a {
+  color: rgba(255, 255, 255, 0.78);
+}
+
+header [role="menu"] a:hover {
+  color: #ffffff;
+
+  background: rgba(255, 255, 255, 0.07);
+}
+
+header details summary {
+  color: #ffffff;
+}
+
+header details a {
+  color: rgba(255, 255, 255, 0.72);
+}
+
+header details a:hover {
+  color: #ffffff;
+}
+
+
+/* =========================================================
+   FOOTER
+========================================================= */
+
+.ml-footer {
+  position: relative;
+
+  overflow: hidden;
+
+  padding-block: 90px 32px;
+
+  border-top: 1px solid var(--ml-border);
+
+  background:
+    radial-gradient(
+      circle at 90% 0%,
+      rgba(200, 255, 0, 0.055),
+      transparent 25%
+    ),
+    #070808;
+
+  color: #ffffff;
+}
+
+.ml-footer::before {
+  content: "";
+
+  position: absolute;
+
+  inset: 0;
+
+  background-image:
+    linear-gradient(
+      rgba(255, 255, 255, 0.02) 1px,
+      transparent 1px
+    ),
+    linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0.02) 1px,
+      transparent 1px
+    );
+
+  background-size: 70px 70px;
+
+  pointer-events: none;
+}
+
+.ml-footer > * {
+  position: relative;
+
+  z-index: 1;
+}
+
+.ml-footer,
+.ml-footer * {
+  color: #ffffff;
+}
+
+.ml-footer p {
+  color: rgba(255, 255, 255, 0.62);
+}
+
+.ml-footer a {
+  color: rgba(255, 255, 255, 0.72);
+
+  transition:
+    color var(--ml-transition);
+}
+
+.ml-footer a:hover {
+  color: var(--ml-lime);
+}
+
+.ml-footer .ml-eyebrow {
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.ml-footer .ml-eyebrow::before {
+  background: var(--ml-lime);
+}
+
+.ml-footer-title {
+  color: #ffffff;
+
+  font-size: 1.05rem;
+
+  font-weight: 600;
+}
+
+.ml-footer-link {
+  display: inline-flex;
+
+  color: rgba(255, 255, 255, 0.68);
+
+  font-size: 0.9rem;
+
+  transition:
+    color var(--ml-transition),
+    transform var(--ml-transition);
+}
+
+.ml-footer-link:hover {
+  color: var(--ml-lime);
+
+  transform: translateX(3px);
+}
+
+
+/* =========================================================
+   TEXT UTILITIES
+========================================================= */
+
+.ml-text-white {
+  color: var(--ml-white);
+}
+
+.ml-text-muted {
+  color: var(--ml-muted);
+}
+
+.ml-text-muted-light {
+  color: var(--ml-muted-light);
+}
+
+.ml-text-lime {
+  color: var(--ml-lime);
+}
+
+
+/* =========================================================
+   BACKGROUND CONTENT LAYER
+========================================================= */
+
+.ml-bg-content {
+  position: relative;
+
+  z-index: 1;
+}
+
+
+/* =========================================================
+   FOCUS ACCESSIBILITY
+========================================================= */
+
+:focus-visible {
+  outline: 2px solid var(--ml-lime);
+
+  outline-offset: 4px;
+}
+
+
+/* =========================================================
+   REDUCED MOTION
+========================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+
+/* =========================================================
+   RESPONSIVE — TABLET
+========================================================= */
+
+@media (max-width: 900px) {
+  :root {
+    --ml-container-padding: 20px;
+
+    --ml-section-padding: 85px;
+    --ml-section-padding-sm: 65px;
+  }
+
+  .ml-section-lg {
+    padding-block: 105px;
+  }
+
+  .ml-section-xl {
+    padding-block: 125px;
+  }
+
+  .ml-service-item {
+    grid-template-columns: 55px 1fr auto;
+
+    gap: 20px;
+  }
+
+  .ml-cta {
+    padding: 60px 40px;
+  }
+
+  .ml-team-image {
+    width: 150px;
+    height: 150px;
+  }
+}
+
+
+/* =========================================================
+   RESPONSIVE — MOBILE
+========================================================= */
+
+@media (max-width: 640px) {
+  :root {
+    --ml-container-padding: 18px;
+
+    --ml-section-padding: 70px;
+    --ml-section-padding-sm: 52px;
+  }
+
+  body {
+    font-size: 15px;
+  }
+
+  .ml-display {
+    font-size: clamp(3rem, 16vw, 5rem);
+
+    line-height: 0.92;
+  }
+
+  .ml-heading-xl {
+    font-size: clamp(2.7rem, 14vw, 4.4rem);
+  }
+
+  .ml-heading-lg {
+    font-size: clamp(2.35rem, 12vw, 3.8rem);
+  }
+
+  .ml-heading-md {
+    font-size: 2rem;
+  }
+
+  .ml-section-title {
+    font-size: 2.25rem;
+  }
+
+  .ml-section-lg {
+    padding-block: 90px;
+  }
+
+  .ml-section-xl {
+    padding-block: 100px;
+  }
+
+  .ml-hero-shape {
+    width: 280px;
+    height: 280px;
+  }
+
+  .ml-service-item {
+    grid-template-columns: 42px 1fr;
+
+    gap: 12px;
+
+    padding-block: 24px;
+  }
+
+  .ml-service-arrow {
+    display: none;
+  }
+
+  .ml-service-title {
+    font-size: 1.45rem;
+  }
+
+  .ml-card,
+  .ml-card-soft,
+  .ml-card-blue {
+    padding: 22px;
+  }
+
+  .ml-product-card {
+    min-height: 260px;
+
+    padding: 24px;
+  }
+
+  .ml-team-card {
+    padding: 22px;
+  }
+
+  .ml-team-image {
+    width: 140px;
+    height: 140px;
+  }
+
+  .ml-modal {
+    padding: 14px;
+  }
+
+  .ml-modal-panel {
+    padding: 28px 22px;
+
+    border-radius: var(--ml-radius-lg);
+  }
+
+  .ml-cta {
+    padding: 45px 24px;
+  }
+
+  .ml-cta-title {
+    font-size: clamp(2.6rem, 13vw, 4rem);
+  }
+
+  .ml-footer {
+    padding-block: 65px 25px;
+  }
+
+  .ml-image-frame::after {
+    inset: 8px;
+  }
+}
+
+
+/* =========================================================
+   SMALL MOBILE
+========================================================= */
+
+@media (max-width: 400px) {
+  .ml-btn {
+    width: 100%;
+  }
+
+  .ml-display {
+    font-size: 2.9rem;
+  }
+
+  .ml-heading-xl {
+    font-size: 2.7rem;
+  }
+
+  .ml-service-item {
+    grid-template-columns: 34px 1fr;
+  }
+
+  .ml-service-number {
+    font-size: 0.65rem;
+  }
+}
+
+
+/* =========================================================
+   PRINT
+========================================================= */
+
+@media print {
+  *,
+  *::before,
+  *::after {
+    background: transparent !important;
+    color: #000 !important;
+    box-shadow: none !important;
+  }
+
+  body {
+    background: #fff !important;
+  }
+
+  a {
+    text-decoration: underline;
+  }
+}
+/* =========================================================
+   HERO CONTRAST FIX
+   Forces the Meritlives hero into the dark visual system
+========================================================= */
+
+.ml-hero-bg {
+  position: relative !important;
+  overflow: hidden !important;
+
+  background:
+    radial-gradient(
+      circle at 78% 20%,
+      rgba(200, 255, 0, 0.10),
+      transparent 24%
+    ),
+    radial-gradient(
+      circle at 15% 80%,
+      rgba(255, 255, 255, 0.035),
+      transparent 25%
+    ),
+    #080909 !important;
+
+  color: #ffffff !important;
+}
+
+/* Technical grid */
+.ml-hero-bg::before {
+  content: "" !important;
+
+  position: absolute !important;
+  inset: 0 !important;
+
+  background-image:
+    linear-gradient(
+      rgba(255, 255, 255, 0.035) 1px,
+      transparent 1px
+    ),
+    linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0.035) 1px,
+      transparent 1px
+    ) !important;
+
+  background-size: 64px 64px !important;
+
+  pointer-events: none !important;
+}
+
+/* Everything inside hero stays above grid */
+.ml-hero-bg > * {
+  position: relative;
+  z-index: 2;
+}
+
+/* Main hero heading */
+.ml-hero-bg .ml-display {
+  color: #ffffff !important;
+
+  text-shadow:
+    0 0 40px rgba(255, 255, 255, 0.02);
+}
+
+/* Highlight words / lime text */
+.ml-hero-bg .ml-text-lime {
+  color: #c8ff00 !important;
+}
+
+/* Hero paragraphs */
+.ml-hero-bg p {
+  color: rgba(255, 255, 255, 0.68);
+}
+
+/* Hero eyebrow */
+.ml-hero-bg .ml-eyebrow {
+  color: #c8ff00 !important;
+}
+
+/* =========================================================
+   HERO BUILD CARD
+========================================================= */
+
+.ml-hero-bg .ml-card,
+.ml-hero-bg .ml-card-soft,
+.ml-hero-bg .ml-card-blue {
+  border-color: rgba(255, 255, 255, 0.12) !important;
+
+  background:
+    linear-gradient(
+      145deg,
+      rgba(255, 255, 255, 0.055),
+      rgba(255, 255, 255, 0.025)
+    ) !important;
+
+  color: #ffffff !important;
+
+  box-shadow:
+    0 30px 80px rgba(0, 0, 0, 0.45) !important;
+}
+
+/* Card headings */
+.ml-hero-bg .ml-card h1,
+.ml-hero-bg .ml-card h2,
+.ml-hero-bg .ml-card h3,
+.ml-hero-bg .ml-card h4,
+.ml-hero-bg .ml-card strong {
+  color: #ffffff !important;
+}
+
+/* Card descriptions */
+.ml-hero-bg .ml-card p {
+  color: rgba(255, 255, 255, 0.68) !important;
+}
+
+/* Card numbers */
+.ml-hero-bg .ml-card .text-blue-300,
+.ml-hero-bg .ml-card .text-blue-400,
+.ml-hero-bg .ml-card .text-blue-500 {
+  color: #c8ff00 !important;
+}
+
+/* Card borders/dividers */
+.ml-hero-bg .ml-card > div {
+  border-color: rgba(255, 255, 255, 0.10) !important;
+}
+
+/* =========================================================
+   REMOVE OLD LIGHT HERO UTILITIES
+========================================================= */
+
+.ml-hero-bg .bg-white {
+  background: #121313 !important;
+}
+
+.ml-hero-bg .bg-slate-50,
+.ml-hero-bg .bg-gray-50 {
+  background: #0d0e0e !important;
+}
+
+.ml-hero-bg .text-black,
+.ml-hero-bg .text-slate-900,
+.ml-hero-bg .text-gray-900 {
+  color: #ffffff !important;
+}
+
+.ml-hero-bg .text-slate-600,
+.ml-hero-bg .text-slate-500,
+.ml-hero-bg .text-gray-600 {
+  color: rgba(255, 255, 255, 0.65) !important;
+}
+
+.ml-hero-bg .border-slate-200,
+.ml-hero-bg .border-gray-200 {
+  border-color: rgba(255, 255, 255, 0.10) !important;
+}
