@@ -11,7 +11,7 @@ class ApiHealthTest extends TestCase
         $response = $this->getJson('/api/v1/health');
 
         $response->assertOk()
-            ->assertJsonPath('status', 'ok')
-            ->assertJsonPath('service', 'meritlives-api');
+            ->assertJsonPath('data.status', 'ok')
+            ->assertJsonPath('data.application', config('app.name'));
     }
 }

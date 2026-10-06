@@ -32,19 +32,25 @@ npm run start
 Configure:
 
 ```env
-NEXT_PUBLIC_API_URL=https://api.example.com/api/v1
-NEXT_PUBLIC_SITE_URL=https://www.example.com
+NEXT_PUBLIC_API_URL=https://api.meritlives.com/api/v1
+NEXT_PUBLIC_SITE_URL=https://www.meritlives.com
 ```
+
+These values are also recorded in `frontend/.env.production` for production builds. Keep `frontend/.env.local` for local development; Next.js uses the local file when it is present, so production builds must run in the production environment without that local-only file.
 
 ## 3. CORS
 
 Set:
 
 ```env
-FRONTEND_URL=https://www.example.com
+APP_URL=https://api.meritlives.com
+FRONTEND_URL=https://www.meritlives.com
+FILESYSTEM_DISK=public
 ```
 
 Do not use `*` for production origins.
+
+The public filesystem disk builds its URL from `APP_URL`, so uploaded files resolve under `https://api.meritlives.com/storage/...`. On the production host, run `php artisan storage:link` and ensure the `public/storage` link and storage permissions are in place. Those are deployment steps; no hosting files are changed here.
 
 ## 4. HTTPS
 

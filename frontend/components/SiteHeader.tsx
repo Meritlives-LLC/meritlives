@@ -119,7 +119,7 @@ export default function SiteHeader() {
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-6 lg:h-[68px]">
 
         {/* ── LOGO ── */}
-        <Link href="*" aria-label="Meritlives home" className="flex shrink-0 items-center gap-2.5">
+        <Link href="/" aria-label="Meritlives home" className="flex shrink-0 items-center gap-2.5">
           <Image
             src="/logo.png"
             alt="Meritlives"
@@ -128,7 +128,10 @@ export default function SiteHeader() {
             priority
             className="h-[34px] w-[34px] object-contain"
           />
-          <span className="font-grotesk text-[17px] font-semibold tracking-[-0.015em] text-white">
+          <span
+            className="text-[17px] font-semibold tracking-[-0.015em] text-white"
+            style={{ fontFamily: 'var(--font-grotesk), "Space Grotesk", sans-serif' }}
+          >
             Meritlives
           </span>
         </Link>

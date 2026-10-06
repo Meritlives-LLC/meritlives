@@ -55,9 +55,12 @@ export interface NewsItem {
     url?: string | null;
   };
   image_url?: string | null;
+  featured_image?: string | null;
   content?: string | null;
+  author_name?: string | null;
   category?: Category | null;
   published_at?: string | null;
+  updated_at?: string | null;
   featured: boolean;
 }
 

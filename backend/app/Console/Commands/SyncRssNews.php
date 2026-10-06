@@ -42,7 +42,7 @@ class SyncRssNews extends Command
         [
             'url' => 'https://techcrunch.com/category/artificial-intelligence/feed/',
             'source_name' => 'TechCrunch',
-            'category' => 'Artificial Intelligence',
+            'category' => 'Technology',
         ],
     ];
 

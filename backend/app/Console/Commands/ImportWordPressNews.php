@@ -105,10 +105,18 @@ class ImportWordPressNews extends Command
 
             $category = null;
             if ($categoryName) {
-                $category = Category::firstOrCreate(
-                    ['slug' => Str::slug($categoryName)],
-                    ['name' => $categoryName, 'type' => 'news', 'status' => 'active']
-                );
+                $approvedCategorySlugs = [
+                    Str::slug('Technology'),
+                    Str::slug('Business'),
+                    Str::slug('Digital Innovation'),
+                ];
+
+                if (in_array(Str::slug($categoryName), $approvedCategorySlugs, true)) {
+                    $category = Category::query()
+                        ->whereIn('slug', $approvedCategorySlugs)
+                        ->where('slug', Str::slug($categoryName))
+                        ->first();
+                }
             }
 
             $featuredImageId = $wp->table('postmeta')

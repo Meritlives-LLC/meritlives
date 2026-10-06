@@ -16,9 +16,9 @@ class ContentSeeder extends Seeder
     public function run(): void
     {
         $categories = [
-            ['name' => 'Artificial Intelligence', 'type' => 'news'],
-            ['name' => 'Cybersecurity', 'type' => 'news'],
-            ['name' => 'Software', 'type' => 'news'],
+            ['name' => 'Technology', 'type' => 'news'],
+            ['name' => 'Business', 'type' => 'news'],
+            ['name' => 'Digital Innovation', 'type' => 'news'],
             ['name' => 'Digital Transformation', 'type' => 'blog'],
             ['name' => 'Technology Business', 'type' => 'blog'],
         ];

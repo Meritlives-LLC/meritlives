@@ -1,201 +1,148 @@
 import Link from "next/link";
+import type { NewsItem, Product, Service } from "../types/api";
 
-const capabilities = [
-  {
-    number: "01",
-    title: "Digital products",
-    description:
-      "Thoughtful digital experiences designed around real people and practical needs.",
-  },
-  {
-    number: "02",
-    title: "Software engineering",
-    description:
-      "Reliable web and software solutions built with clarity, performance and purpose.",
-  },
-  {
-    number: "03",
-    title: "Education",
-    description:
-      "Learning experiences that make useful technology and skills more accessible.",
-  },
-  {
-    number: "04",
-    title: "Innovation",
-    description:
-      "New ideas explored through technology, experimentation and practical problem-solving.",
-  },
-];
+function getPreviewTitle(item: Product | Service | NewsItem | undefined, fallback: string) {
+  if (!item) return fallback;
 
-export default function Hero() {
+  if ("name" in item && typeof item.name === "string" && item.name.trim()) {
+    return item.name;
+  }
+
+  if ("title" in item && typeof item.title === "string" && item.title.trim()) {
+    return item.title;
+  }
+
+  return fallback;
+}
+
+export default function Hero({
+  products = [],
+  services = [],
+  news = [],
+}: {
+  products?: Product[];
+  services?: Service[];
+  news?: NewsItem[];
+}) {
+  const featuredProduct = products[0];
+  const featuredService = services[0];
+  const latestNews = news[0];
+
+  const discoveryItems = [
+    {
+      index: "01",
+      title: "Products",
+      href: "/products",
+      accent: "text-[#1A3BBF]",
+      marker: "bg-[#1A3BBF]",
+      summary: featuredProduct
+        ? featuredProduct.short_description || "Digital products built for real-world impact."
+        : "Digital products built for real-world impact.",
+      detail: featuredProduct ? featuredProduct.name : "Explore the MERITLIVES product portfolio",
+    },
+    {
+      index: "02",
+      title: "Services",
+      href: "/services",
+      accent: "text-[#CC1111]",
+      marker: "bg-[#CC1111]",
+      summary: featuredService
+        ? featuredService.short_description || "Technology services designed around practical needs."
+        : "Technology services designed around practical needs.",
+      detail: featuredService ? featuredService.name : "See how we help teams build and scale",
+    },
+    {
+      index: "03",
+      title: "News",
+      href: "/news",
+      accent: "text-[#3A3F52]",
+      marker: "bg-[#3A3F52]",
+      summary: latestNews
+        ? latestNews.excerpt || "A closer look at ideas, launches and momentum across the ecosystem."
+        : "A closer look at ideas, launches and momentum across the ecosystem.",
+      detail: latestNews ? getPreviewTitle(latestNews, "Latest updates") : "Latest updates",
+    },
+  ];
+
   return (
-    <section className="ml-hero-bg relative overflow-hidden border-b border-white/[0.08]">
-      {/* Decorative geometry */}
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute inset-0 overflow-hidden"
-      >
-        {/* Lime glow */}
-        <div className="absolute -right-40 -top-40 h-[520px] w-[520px] rounded-full bg-[#c8ff00]/[0.06] blur-3xl" />
-
-        {/* Large geometric ring */}
-        <div className="absolute -right-32 top-24 h-[560px] w-[560px] rounded-full border border-[#c8ff00]/[0.10]" />
-
-        <div className="absolute -right-12 top-44 h-[420px] w-[420px] rounded-full border border-white/[0.06]" />
-
-        {/* Grid */}
-        <div
-          className="absolute inset-0 opacity-50"
-          style={{
-            backgroundImage:
-              "linear-gradient(rgba(255,255,255,0.035) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.035) 1px, transparent 1px)",
-            backgroundSize: "64px 64px",
-            maskImage:
-              "linear-gradient(to bottom, black 0%, black 45%, transparent 100%)",
-            WebkitMaskImage:
-              "linear-gradient(to bottom, black 0%, black 45%, transparent 100%)",
-          }}
-        />
+    <section className="relative overflow-hidden border-b border-[#DDE2ED] bg-white text-[#0D0D0D]">
+      <div aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-hidden">
+        <div className="absolute right-[8%] top-[-10rem] hidden h-[34rem] w-[34rem] rounded-full border border-[#DDE2ED] lg:block" />
+        <div className="absolute right-[12%] top-[-6rem] hidden h-[25rem] w-[25rem] rounded-full border border-[#1A3BBF]/15 lg:block" />
+        <div className="absolute right-[calc(12%+12.45rem)] top-0 hidden h-24 w-px bg-[#CC1111]/70 lg:block" />
       </div>
 
-      <div className="ml-container relative z-10">
-        <div className="grid min-h-[760px] items-center gap-16 py-20 lg:grid-cols-[1.1fr_0.9fr] lg:gap-24 lg:py-28">
-          {/* =====================================================
-              LEFT
-          ====================================================== */}
-          <div className="max-w-4xl">
-            <div className="ml-eyebrow">
-              Technology · Innovation · Impact
-            </div>
-
-            <h1 className="mt-7 ml-display text-white">
-              Building
-              <br />
-              technology
-              <br />
-              <span className="text-[#c8ff00]">
-                that moves
-              </span>
-              <br />
-              people forward.
-            </h1>
-
-            <p className="ml-body-lg mt-9 max-w-2xl text-white/65">
-              Meritlives brings together technology, digital innovation,
-              education and practical problem-solving to help people and
-              organisations turn ideas into meaningful progress.
+      <div className="relative mx-auto w-full max-w-[1440px] px-6 py-14 sm:px-10 md:py-20 lg:px-16 lg:py-24">
+        <div className="grid gap-14 lg:grid-cols-[1.3fr_0.7fr] lg:items-end lg:gap-20">
+          <div className="relative">
+            <p className="flex items-center gap-3 text-[11px] font-semibold uppercase tracking-[0.2em] text-[#3A3F52]">
+              <span className="h-px w-9 bg-[#CC1111]" aria-hidden="true" />
+              MERITLIVES · Technology for Africa
             </p>
 
-            {/* CTA */}
-            <div className="mt-10 flex flex-wrap gap-3">
-              <Link
-                href="/products"
-                className="ml-btn ml-btn-lime"
-              >
-                Explore our work
-                <span aria-hidden="true">→</span>
-              </Link>
+            <h1
+              className="mt-8 text-[clamp(3.6rem,9vw,8.5rem)] font-medium leading-[0.91] tracking-[-0.075em] text-[#0D0D0D]"
+              style={{ fontFamily: 'var(--font-grotesk), "Space Grotesk", sans-serif' }}
+            >
+              <span className="block">Built on Merit.</span>
+              <span className="block">Built for <span className="text-[#CC1111]">Africa.</span></span>
+            </h1>
 
+            <div className="mt-8 grid gap-6 sm:grid-cols-[1fr_auto] sm:items-end">
+              <p className="max-w-xl text-base leading-7 text-[#3A3F52] md:text-lg md:leading-8">
+                We build technology, digital products and solutions that contribute to Africa’s digital future.
+              </p>
               <Link
                 href="/about"
-                className="ml-btn ml-btn-ghost"
+                className="group inline-flex items-center gap-2 justify-self-start border-b border-[#8892A4] pb-1 text-sm font-medium text-[#0D0D0D] transition-colors hover:border-[#CC1111] hover:text-[#CC1111] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#1A3BBF]"
               >
-                Who we are
+                About MERITLIVES
+                <span aria-hidden="true" className="transition-transform group-hover:translate-x-1">↗</span>
               </Link>
             </div>
 
-            {/* Location / company */}
-            <div className="mt-14 flex flex-wrap items-center gap-x-8 gap-y-3 font-mono text-[11px] uppercase tracking-[0.08em] text-white/40">
-              <span>Abuja, Nigeria</span>
-
-              <span className="hidden h-1 w-1 rounded-full bg-[#c8ff00] sm:block" />
-
-              <span>A KGC Meritzone Consults Ltd company</span>
+            <div className="mt-12 flex items-center gap-3 text-[10px] font-medium uppercase tracking-[0.18em] text-[#8892A4]">
+              <span className="h-1.5 w-1.5 rounded-full bg-[#1A3BBF]" aria-hidden="true" />
+              Abuja, Nigeria
+              <span className="mx-1 h-3 w-px bg-[#DDE2ED]" aria-hidden="true" />
+              Built for the continent
             </div>
           </div>
 
-          {/* =====================================================
-              RIGHT — WHAT WE BUILD
-          ====================================================== */}
-          <div className="relative">
-            {/* Glow behind card */}
-            <div
-              aria-hidden="true"
-              className="absolute -inset-6 rounded-[36px] bg-[#c8ff00]/[0.035] blur-3xl"
-            />
-
-            <div className="ml-card relative overflow-hidden !p-0">
-              {/* Card header */}
-              <div className="border-b border-white/[0.10] px-7 py-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="font-mono text-[11px] font-medium uppercase tracking-[0.16em] text-[#c8ff00]">
-                      What we build
-                    </p>
-
-                    <p className="mt-2 text-sm text-white/50">
-                      Practical solutions with purpose.
-                    </p>
-                  </div>
-
-                  <div className="flex h-10 w-10 items-center justify-center rounded-full border border-[#c8ff00]/20 bg-[#c8ff00]/[0.08] font-mono text-sm font-bold text-[#c8ff00]">
-                    M
-                  </div>
-                </div>
-              </div>
-
-              {/* Capabilities */}
-              <div>
-                {capabilities.map((item) => (
-                  <div
-                    key={item.number}
-                    className="group flex gap-5 border-b border-white/[0.08] px-7 py-7 transition-colors duration-200 hover:bg-white/[0.035]"
-                  >
-                    {/* Number */}
-                    <span className="pt-1 font-mono text-[11px] font-medium text-white/25 transition-colors duration-200 group-hover:text-[#c8ff00]">
-                      {item.number}
-                    </span>
-
-                    {/* Content */}
-                    <div>
-                      <h2 className="font-[var(--font-heading)] text-base font-semibold tracking-tight text-white">
-                        {item.title}
-                      </h2>
-
-                      <p className="mt-2 text-sm leading-6 text-white/50">
-                        {item.description}
-                      </p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              {/* Card footer */}
-              <div className="bg-white/[0.025] px-7 py-5">
+          <nav aria-label="Discover MERITLIVES" className="relative lg:pb-2">
+            <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.18em] text-[#8892A4]">
+              Discover
+            </p>
+            <div className="border-t border-[#DDE2ED]">
+              {discoveryItems.map((item) => (
                 <Link
-                  href="/services"
-                  className="group inline-flex items-center gap-2 font-mono text-xs uppercase tracking-[0.08em] text-white/65 transition-colors duration-200 hover:text-[#c8ff00]"
+                  key={item.title}
+                  href={item.href}
+                  className="group block border-b border-[#DDE2ED] py-4 outline-none focus-visible:bg-[#F2F4F8] sm:py-5"
+                  aria-label={`Explore ${item.title}: ${item.detail}`}
                 >
-                  Discover our capabilities
+                  <span className="flex items-center gap-3">
+                    <span className={`h-1.5 w-1.5 rounded-full ${item.marker}`} aria-hidden="true" />
+                    <span className={`text-[10px] font-semibold uppercase tracking-[0.18em] ${item.accent}`}>
+                      {item.index} / {item.title}
+                    </span>
+                    <span aria-hidden="true" className="ml-auto text-lg text-[#8892A4] transition-transform group-hover:translate-x-1 group-focus-visible:translate-x-1">
+                      ↗
+                    </span>
+                  </span>
 
-                  <span
-                    aria-hidden="true"
-                    className="transition-transform duration-200 group-hover:translate-x-1"
-                  >
-                    →
+                  <span className="mt-2 block pl-[1.125rem] text-base font-medium tracking-tight text-[#0D0D0D] sm:text-lg">
+                    {item.detail}
+                  </span>
+                  <span className="mt-0 block max-h-0 overflow-hidden pl-[1.125rem] text-sm leading-6 text-[#3A3F52] opacity-0 transition-[max-height,opacity,margin] duration-200 group-hover:mt-2 group-hover:max-h-24 group-hover:opacity-100 group-focus-visible:mt-2 group-focus-visible:max-h-24 group-focus-visible:opacity-100 motion-reduce:transition-none max-md:mt-2 max-md:max-h-24 max-md:opacity-100">
+                    {item.summary}
                   </span>
                 </Link>
-              </div>
+              ))}
             </div>
-          </div>
+          </nav>
         </div>
       </div>
-
-      {/* Bottom technical line */}
-      <div
-        aria-hidden="true"
-        className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[#c8ff00]/30 to-transparent"
-      />
     </section>
   );
 }

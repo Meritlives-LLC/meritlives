@@ -18,33 +18,38 @@
      COLOUR SYSTEM
   ------------------------------------------------------- */
 
-  --ml-bg: #080909;
-  --ml-bg-soft: #0d0e0e;
-  --ml-bg-elevated: #101111;
+  --ml-bg: #0D0D0D;
+  --ml-bg-soft: #111827;
+  --ml-bg-elevated: #101827;
 
-  --ml-surface: #121313;
-  --ml-surface-2: #181919;
-  --ml-surface-3: #202121;
+  --ml-surface: #111827;
+  --ml-surface-2: #171f2b;
+  --ml-surface-3: #1d2638;
 
-  --ml-white: #ffffff;
-  --ml-ink: #f5f5f2;
-  --ml-muted: #999b96;
-  --ml-muted-light: #c4c6c0;
+  --ml-white: #FFFFFF;
+  --ml-ink: #F2F4F8;
+  --ml-muted: #8892A4;
+  --ml-muted-light: #DDE2ED;
 
-  --ml-lime: #c8ff00;
-  --ml-lime-soft: #ddff68;
-  --ml-lime-dark: #9bc700;
+  --ml-red: #CC1111;
+  --ml-red-deep: #8B0000;
+  --ml-blue: #1A3BBF;
+  --ml-blue-deep: #0D2280;
+  --ml-cloud: #F2F4F8;
+  --ml-slate: #3A3F52;
+  --ml-border: rgba(221, 226, 237, 0.2);
+  --ml-border-strong: rgba(221, 226, 237, 0.35);
+  --ml-border-soft: rgba(221, 226, 237, 0.12);
 
-  --ml-border: rgba(255, 255, 255, 0.1);
-  --ml-border-strong: rgba(255, 255, 255, 0.18);
-  --ml-border-soft: rgba(255, 255, 255, 0.06);
-
-  --ml-overlay: rgba(8, 9, 9, 0.82);
+  --ml-overlay: rgba(13, 13, 13, 0.82);
 
   /* Legacy compatibility */
-  --ml-primary: #ffffff;
-  --ml-accent: #c8ff00;
-  --ml-violet: #c8ff00;
+  --ml-primary: #FFFFFF;
+  --ml-accent: #CC1111;
+  --ml-violet: #1A3BBF;
+  --ml-lime: #CC1111;
+  --ml-lime-soft: #e34a4a;
+  --ml-lime-dark: #8B0000;
 
   /* -------------------------------------------------------
      TYPOGRAPHY
@@ -105,8 +110,13 @@ body {
   background:
     radial-gradient(
       circle at 50% -20%,
-      rgba(200, 255, 0, 0.045),
-      transparent 35%
+      rgba(26, 59, 191, 0.12),
+      transparent 30%
+    ),
+    radial-gradient(
+      circle at 80% 18%,
+      rgba(204, 17, 17, 0.08),
+      transparent 28%
     ),
     var(--ml-bg);
 
@@ -156,8 +166,8 @@ a {
 }
 
 ::selection {
-  background: var(--ml-lime);
-  color: #080909;
+  background: var(--ml-red);
+  color: var(--ml-white);
 }
 
 
@@ -369,15 +379,68 @@ a {
   background:
     radial-gradient(
       circle at 78% 18%,
-      rgba(200, 255, 0, 0.12),
-      transparent 20%
+      rgba(26, 59, 191, 0.14),
+      transparent 22%
     ),
     radial-gradient(
       circle at 20% 80%,
-      rgba(255, 255, 255, 0.035),
+      rgba(204, 17, 17, 0.07),
       transparent 25%
     ),
     var(--ml-bg);
+}
+
+.ml-discovery-card {
+  position: relative;
+  padding: 1.5rem 1.4rem 1.2rem;
+  border: 1px solid var(--ml-border);
+  border-radius: 1.5rem;
+  background: rgba(17, 24, 39, 0.8);
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.18);
+  transition: transform 180ms ease, border-color 180ms ease, background 180ms ease, box-shadow 180ms ease;
+}
+
+.ml-discovery-card:hover,
+.ml-discovery-card:focus-visible,
+.ml-discovery-card:focus-within {
+  border-color: rgba(204, 17, 17, 0.38);
+  background: rgba(17, 24, 39, 0.98);
+  transform: translateY(-3px);
+  box-shadow: 0 22px 54px rgba(0, 0, 0, 0.28);
+}
+
+.ml-discovery-summary {
+  max-height: 0;
+  overflow: hidden;
+  opacity: 0;
+  margin: 0;
+  color: rgba(242, 244, 248, 0.7);
+  line-height: 1.6;
+  transition: max-height 180ms ease, opacity 180ms ease, margin 180ms ease;
+}
+
+.ml-discovery-card:hover .ml-discovery-summary,
+.ml-discovery-card:focus-visible .ml-discovery-summary,
+.ml-discovery-card:focus-within .ml-discovery-summary {
+  max-height: 120px;
+  opacity: 1;
+  margin-top: 0.75rem;
+}
+
+@media (max-width: 767px) {
+  .ml-discovery-summary {
+    max-height: unset;
+    opacity: 1;
+    overflow: visible;
+    margin-top: 0.75rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ml-discovery-card,
+  .ml-discovery-summary {
+    transition: none;
+  }
 }
 
 .ml-hero-bg::before {

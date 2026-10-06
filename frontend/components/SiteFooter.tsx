@@ -340,30 +340,6 @@ export default function SiteFooter() {
 
           </div>
 
-          <div className="flex items-center gap-5">
-
-            {socialLinks.slice(0, 4).map((social) => (
-              <a
-                key={`bottom-${social.name}`}
-                href={social.href}
-                aria-label={social.name}
-                title={social.name}
-                target={social.href === "#" ? undefined : "_blank"}
-                rel={
-                  social.href === "#"
-                    ? undefined
-                    : "noopener noreferrer"
-                }
-                className="text-white/35 transition-colors duration-200 hover:text-[#c8ff00]"
-              >
-                <span className="block h-[15px] w-[15px]">
-                  {social.icon}
-                </span>
-              </a>
-            ))}
-
-          </div>
-
         </div>
 
       </div>
