@@ -22,7 +22,7 @@ const teamMembers: TeamMember[] = [
   {
     id: 2,
     name: "Onime Samuel Ikhuenmiohimen",
-    role: "CTO",
+    role: "Chief Technology Officer",
     image: "/team/Onime.jpeg",
     bio: "Onime Samuel Ikhuenmiohimen is a technology and engineering professional, entrepreneur, and business executive with a background in Electrical & Electronics Engineering. He works at the intersection of technology, business, and innovation, with experience spanning software development, AI-powered solutions, digital products, IT infrastructure, and automation. Samuel is passionate about building practical, scalable technology solutions that solve real-world problems and create lasting business value. Based in Abuja, Nigeria, he is focused on developing technology ventures with the potential to serve businesses and users across Nigeria and global markets.",
   },
