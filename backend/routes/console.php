@@ -10,3 +10,4 @@ Artisan::command('inspire', function () {
 
 // Keep scheduled work explicit and observable.
 Schedule::command('news:sync-rss')->hourly()->withoutOverlapping();
+Schedule::command('watch:collect')->everySixHours()->withoutOverlapping();

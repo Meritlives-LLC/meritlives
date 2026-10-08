@@ -16,6 +16,7 @@ class DatabaseSeeder extends Seeder
             RolesAndPermissionsSeeder::class,
             FilamentAdminSeeder::class,
             ContentSeeder::class,
+            WatchSourceSeeder::class,
         ]);
     }
 }

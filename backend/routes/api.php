@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\V1\NewsletterController;
 use App\Http\Controllers\Api\V1\ProductController;
 use App\Http\Controllers\Api\V1\SearchController;
 use App\Http\Controllers\Api\V1\ServiceController;
+use App\Http\Controllers\Api\V1\WatchController;
 use Illuminate\Support\Facades\Route;
 
 // Merged from phase1 (base), phase3 (full route set) and phase7 (named
@@ -35,6 +36,9 @@ Route::prefix('v1')->group(function () {
 
     Route::get('/blog', [BlogController::class, 'index'])->name('api.blog.index');
     Route::get('/blog/{slug}', [BlogController::class, 'show'])->name('api.blog.show');
+
+    Route::get('/watch', [WatchController::class, 'index'])->name('api.watch.index');
+    Route::get('/watch/{slug}', [WatchController::class, 'show'])->name('api.watch.show');
 
     Route::get('/categories', [CategoryController::class, 'index'])->name('api.categories.index');
     Route::get('/search', SearchController::class)->name('api.search');
