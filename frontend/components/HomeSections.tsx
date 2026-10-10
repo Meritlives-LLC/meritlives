@@ -1,8 +1,11 @@
 import Link from "next/link";
+import { Suspense, type ReactNode } from "react";
 import type { NewsItem, Product, Service } from "../types/api";
 import { formatNewsDate, getExternalNewsSource, getNewsCategoryLabel } from "../lib/news-presentation";
+import { getWatchVideos } from "../lib/watch-queries";
 import ProductsList from "./ProductsList";
 import ServicesList from "./ServicesList";
+import { WatchVideoGrid, WatchVideoLoading } from "./WatchVideoGrid";
 
 function StoryMetadata({ story }: { story: NewsItem }) {
   const date = formatNewsDate(story.published_at);
@@ -183,43 +186,60 @@ export function FeaturedStories({ stories }: { stories: NewsItem[] }) {
   );
 }
 
-export function MeritlivesWatch() {
+function WatchSectionFrame({ children }: { children: ReactNode }) {
   return (
-    <section aria-labelledby="meritlives-watch-title" className="relative overflow-hidden border-t border-white/10 bg-[#0D0D0D] text-white">
-      <div aria-hidden="true" className="pointer-events-none absolute -right-24 -top-36 h-96 w-96 rounded-full border border-[#1A3BBF]/25" />
-      <div aria-hidden="true" className="pointer-events-none absolute -right-8 -top-20 h-64 w-64 rounded-full border border-[#CC1111]/25" />
-
-      <div className="ml-container relative py-16 md:py-20 lg:py-24">
-        <div className="mb-8 flex items-end justify-between gap-6 border-b border-white/15 pb-6">
+    <section aria-labelledby="meritlives-watch-title" className="border-t border-[#D5D8DE] bg-white text-[#0D0D0D]">
+      <div className="ml-container py-14 md:py-18 lg:py-20">
+        <div className="mb-8 flex flex-wrap items-end justify-between gap-5 border-b border-[#D5D8DE] pb-6">
           <div>
-            <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#8892A4]">Stories in motion</p>
+            <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#CC1111]">Stories in motion</p>
             <h2
               id="meritlives-watch-title"
-              className="mt-3 text-4xl font-medium leading-none tracking-[-0.06em] md:text-6xl"
+              className="mt-3 text-4xl font-medium leading-none tracking-[-0.06em] sm:text-5xl md:text-6xl"
               style={{ fontFamily: 'var(--font-grotesk), "Space Grotesk", sans-serif' }}
             >
               MERITLIVES <span className="text-[#CC1111]">Watch</span>
             </h2>
           </div>
-          <span className="hidden text-[10px] font-medium uppercase tracking-[0.18em] text-white/45 sm:block">Video · Ideas · Perspectives</span>
+          <Link href="/watch" className="text-sm font-semibold text-[#1A3BBF] underline underline-offset-4">Explore all videos</Link>
         </div>
-
-        <div className="grid min-h-64 place-items-center border border-white/15 bg-[#111827] px-6 py-14 text-center md:min-h-80">
-          <div className="max-w-lg">
-            <div aria-hidden="true" className="mx-auto grid h-12 w-12 place-items-center border border-white/25 text-[#CC1111]">
-              <span className="ml-1 block h-0 w-0 border-y-[7px] border-y-transparent border-l-[10px] border-l-current" />
-            </div>
-            <p className="mt-6 text-[10px] font-semibold uppercase tracking-[0.2em] text-[#8892A4]">The screen is yours</p>
-            <p className="mt-2 text-xl font-medium tracking-tight text-white md:text-2xl">
-              Video stories will appear here when available.
-            </p>
-          </div>
-        </div>
+        {children}
       </div>
     </section>
   );
 }
 
+async function WatchSectionContent() {
+  try {
+    const result = await getWatchVideos(1, 3);
+
+    if (result.data.length === 0) {
+      return (
+        <WatchSectionFrame>
+          <p className="border-y border-[#D5D8DE] py-8 text-sm text-[#5D6472]">No Watch videos are available right now.</p>
+        </WatchSectionFrame>
+      );
+    }
+
+    return <WatchSectionFrame><WatchVideoGrid videos={result.data} /></WatchSectionFrame>;
+  } catch {
+    return (
+      <WatchSectionFrame>
+        <p role="status" className="border-y border-[#D5D8DE] py-8 text-sm text-[#5D6472]">
+          MERITLIVES Watch is temporarily unavailable. Please try again later.
+        </p>
+      </WatchSectionFrame>
+    );
+  }
+}
+
+export function MeritlivesWatch() {
+  return (
+    <Suspense fallback={<WatchSectionFrame><WatchVideoLoading compact /></WatchSectionFrame>}>
+      <WatchSectionContent />
+    </Suspense>
+  );
+}
 export function IntroSection() {
   return (
     <section className="relative overflow-hidden border-b border-white/10 bg-[#0B0F17]">

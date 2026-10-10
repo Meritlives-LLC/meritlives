@@ -13,16 +13,16 @@ return new class extends Migration
             $table->foreignId('watch_source_id')->constrained()->restrictOnDelete();
             $table->string('youtube_video_id', 11)->unique();
             $table->string('title');
-            $table->string('slug')->unique();
+            $table->string('slug', 191)->unique();
             $table->text('description')->nullable();
             $table->text('thumbnail_url')->nullable();
             $table->text('video_url');
-            $table->string('category');
+            $table->string('category', 64);
             $table->timestamp('published_at')->nullable()->index();
             $table->string('duration', 32)->nullable();
             $table->decimal('relevance_score', 5, 2)->default(0);
             $table->decimal('quality_score', 5, 2)->default(0);
-            $table->string('status')->default('inactive')->index();
+            $table->string('status', 32)->default('inactive')->index();
             $table->boolean('is_featured')->default(false);
             $table->timestamps();
 
