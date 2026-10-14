@@ -23,17 +23,18 @@ class NewsImageGenerator
             throw new RuntimeException('OPENAI_API_KEY is not configured.');
         }
 
-        $estimate = (float) config('openai_images.estimated_cost_per_image_usd', 0.005);
+        // This is a configurable estimate, not an OpenAI billing guarantee.
+        $estimate = max(0.01, (float) config('openai_images.estimated_cost_per_image_usd', 0.10));
         $dailyLimit = max(1, (int) config('openai_images.daily_limit', 10));
-        $batchLimit = max(1, (int) config('openai_images.batch_limit', 5));
         $monthlyBudget = max(0, (float) config('openai_images.monthly_budget_usd', 5));
-        $todayCount = NewsImageGeneration::whereDate('created_at', today())->whereIn('status', ['pending', 'succeeded'])->count();
+        $countedStatuses = ['pending', 'succeeded', 'failed'];
+        $todayCount = NewsImageGeneration::whereDate('created_at', today())
+            ->whereIn('status', $countedStatuses)->count();
         $monthSpend = (float) NewsImageGeneration::whereYear('created_at', now()->year)
             ->whereMonth('created_at', now()->month)
-            ->whereIn('status', ['pending', 'succeeded'])
-            ->sum('estimated_cost_usd');
+            ->whereIn('status', $countedStatuses)->sum('estimated_cost_usd');
 
-        if ($todayCount >= $dailyLimit || $batchLimit < 1) {
+        if ($todayCount >= $dailyLimit) {
             throw new RuntimeException('The daily image generation limit has been reached.');
         }
         if ($monthSpend + $estimate > $monthlyBudget) {
@@ -51,8 +52,7 @@ class NewsImageGenerator
         ]);
 
         try {
-            $response = Http::withToken($apiKey)
-                ->acceptJson()
+            $response = Http::withToken($apiKey)->acceptJson()
                 ->timeout((int) config('openai_images.timeout_seconds', 180))
                 ->post('https://api.openai.com/v1/images/generations', [
                     'model' => config('openai_images.model', 'gpt-image-2'),
@@ -92,10 +92,7 @@ class NewsImageGenerator
 
             return $generation->fresh();
         } catch (Throwable $e) {
-            $generation->update([
-                'status' => 'failed',
-                'error_message' => mb_substr($e->getMessage(), 0, 2000),
-            ]);
+            $generation->update(['status' => 'failed', 'error_message' => mb_substr($e->getMessage(), 0, 2000)]);
             throw $e;
         }
     }
