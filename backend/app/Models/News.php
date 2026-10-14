@@ -27,8 +27,6 @@ class News extends Model
     protected static function booted(): void
     {
         static::saving(function (News $news): void {
-            // Any attempt to newly publish must pass the same gate, including
-            // imports and non-Filament code paths.
             if ($news->status === 'published' && $news->isDirty('status')) {
                 if ($news->editorial_status !== 'approved'
                     || $news->image_review_status !== 'approved'
@@ -71,6 +69,11 @@ class News extends Model
     public function imageGenerations(): HasMany
     {
         return $this->hasMany(NewsImageGeneration::class);
+    }
+
+    public function articleGenerations(): HasMany
+    {
+        return $this->hasMany(NewsArticleGeneration::class);
     }
 
     public function articleReviewer(): BelongsTo
