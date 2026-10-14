@@ -12,41 +12,25 @@ use Illuminate\Support\Str;
 class SyncRssNews extends Command
 {
     /**
-     * php artisan news:sync-rss
-     * php artisan news:sync-rss --dry-run
-     *
      * Imports only RSS-provided summaries with attribution and source links.
-     * New items are editorial drafts (pending); syncing an existing item must
-     * not republish it or overwrite an editor-approved article body.
+     * New items are pending editorial drafts. Existing published stories are
+     * left untouched by routine feed syncs.
      */
     protected $signature = 'news:sync-rss {--dry-run : Show what would be imported without writing anything}';
+    protected $description = 'Sync TechCrunch RSS feeds into the news table as editorial drafts';
 
-    protected $description = 'Sync TechCrunch (general + AI) RSS feeds into the news table as editorial drafts';
-
-    /** @var array<int, array{url: string, source_name: string, category: string}> */
     private array $feeds = [
-        [
-            'url' => 'https://techcrunch.com/feed/',
-            'source_name' => 'TechCrunch',
-            'category' => 'Technology',
-        ],
-        [
-            'url' => 'https://techcrunch.com/category/artificial-intelligence/feed/',
-            'source_name' => 'TechCrunch',
-            'category' => 'Technology',
-        ],
+        ['url' => 'https://techcrunch.com/feed/', 'source_name' => 'TechCrunch', 'category' => 'Technology'],
+        ['url' => 'https://techcrunch.com/category/artificial-intelligence/feed/', 'source_name' => 'TechCrunch', 'category' => 'Technology'],
     ];
 
     public function handle(): int
     {
         $dryRun = (bool) $this->option('dry-run');
-        $created = 0;
-        $updated = 0;
-        $failed = 0;
+        $created = $updated = $failed = 0;
 
         foreach ($this->feeds as $feed) {
             $this->info("Fetching {$feed['url']} ...");
-
             try {
                 $response = Http::timeout(20)->get($feed['url']);
             } catch (\Throwable $e) {
@@ -62,7 +46,6 @@ class SyncRssNews extends Command
             }
 
             $xml = @simplexml_load_string($response->body(), 'SimpleXMLElement', LIBXML_NOCDATA);
-
             if ($xml === false || ! isset($xml->channel->item)) {
                 $this->error("Could not parse RSS from {$feed['url']}");
                 $failed++;
@@ -75,22 +58,16 @@ class SyncRssNews extends Command
             );
 
             $itemCount = 0;
-
             foreach ($xml->channel->item as $item) {
                 $itemCount++;
                 $link = trim((string) $item->link);
                 $guid = trim((string) $item->guid) ?: $link;
                 $title = trim((string) $item->title);
+                if (! $guid || ! $title) continue;
 
-                if (! $guid || ! $title) {
-                    continue;
-                }
-
-                $description = trim(strip_tags((string) $item->description));
-                $excerpt = Str::limit($description, 400);
+                $excerpt = Str::limit(trim(strip_tags((string) $item->description)), 400);
                 $imageUrl = $this->extractImage($item);
                 $publishedAt = null;
-
                 if ((string) $item->pubDate) {
                     try {
                         $publishedAt = Carbon::parse((string) $item->pubDate);
@@ -99,14 +76,9 @@ class SyncRssNews extends Command
                     }
                 }
 
-                if ($dryRun) {
-                    continue;
-                }
+                if ($dryRun) continue;
 
                 $news = News::where('external_id', $guid)->first();
-
-                // Keep updates limited to feed metadata. In particular, never
-                // change status or article content of an existing record.
                 $attributes = [
                     'category_id' => $category->id,
                     'title' => $title,
@@ -120,7 +92,11 @@ class SyncRssNews extends Command
                 ];
 
                 if ($news) {
-                    $news->update($attributes);
+                    // A routine feed sync must never alter or unpublish a story
+                    // that an editor has already published.
+                    if ($news->status !== 'published') {
+                        $news->update($attributes);
+                    }
                     $updated++;
                 } else {
                     $attributes['external_id'] = $guid;
@@ -138,7 +114,7 @@ class SyncRssNews extends Command
             return self::SUCCESS;
         }
 
-        $this->info("Done. Created: {$created}, Updated: {$updated}, Feed failures: {$failed}.");
+        $this->info("Done. Created: {$created}, Updated/skipped-existing: {$updated}, Feed failures: {$failed}.");
         return $failed > 0 ? self::FAILURE : self::SUCCESS;
     }
 
@@ -148,15 +124,12 @@ class SyncRssNews extends Command
         if (isset($media->content) && (string) $media->content->attributes()->url) {
             return (string) $media->content->attributes()->url;
         }
-
         if (isset($item->enclosure) && (string) $item->enclosure->attributes()->url) {
             return (string) $item->enclosure->attributes()->url;
         }
-
         if (preg_match('/<img[^>]+src=["\\']([^"\\']+)["\\']/i', (string) $item->description, $m)) {
             return $m[1];
         }
-
         return null;
     }
 }
