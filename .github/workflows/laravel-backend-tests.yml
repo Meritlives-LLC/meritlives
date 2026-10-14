@@ -18,7 +18,8 @@ permissions:
   contents: read
 
 jobs:
-  test:
+  editorial-tests:
+    name: Editorial workflow tests
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -26,7 +27,32 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.4"
+          extensions: bcmath, ctype, curl, dom, fileinfo, intl, mbstring, pdo_sqlite, sqlite3, tokenizer, xml
+          coverage: none
+          tools: composer:v2
+      - name: Install dependencies
+        run: composer install --no-interaction --prefer-dist --no-progress
+      - name: Prepare test environment
+        run: |
+          cp .env.example .env
+          php artisan key:generate --force
+          mkdir -p storage/framework/cache storage/framework/sessions storage/framework/views bootstrap/cache
+      - name: Run editorial readiness and publishing gate tests
+        run: php artisan test --filter='EditorialReadinessTest|EditorialPublishingGateTest'
 
+  full-suite:
+    name: Full backend test suite
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
       - name: Set up PHP
         uses: shivammathur/setup-php@v2
         with:
@@ -35,18 +61,14 @@ jobs:
           extensions: bcmath, ctype, curl, dom, fileinfo, intl, mbstring, pdo_sqlite, sqlite3, tokenizer, xml
           coverage: none
           tools: composer:v2
-
       - name: Validate Composer configuration
         run: composer validate --no-check-publish
-
       - name: Install dependencies
         run: composer install --no-interaction --prefer-dist --no-progress
-
       - name: Prepare test environment
         run: |
           cp .env.example .env
           php artisan key:generate --force
           mkdir -p storage/framework/cache storage/framework/sessions storage/framework/views bootstrap/cache
-
-      - name: Run test suite
+      - name: Run full test suite
         run: php artisan test
