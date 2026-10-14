@@ -6,6 +6,7 @@ use App\Filament\Resources\NewsResource\Pages;
 use App\Models\News;
 use App\Models\Category;
 use App\Services\EditorialWorkflow;
+use App\Services\NewsArticleGenerator;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Notifications\Notification;
@@ -79,6 +80,27 @@ class NewsResource extends Resource
         ])->actions([
             Tables\Actions\EditAction::make()
                 ->visible(fn (): bool => (bool) auth()->user()?->can('edit_news')),
+            Tables\Actions\Action::make('generateArticleDraft')
+                ->label('Generate article draft')
+                ->icon('heroicon-o-sparkles')
+                ->form([
+                    Forms\Components\Textarea::make('source_notes')
+                        ->label('Verified source notes')
+                        ->helperText('Paste factual details from the source or reporting notes. The generator will not invent missing facts.')
+                        ->rows(8)->required()->maxLength(12000),
+                ])
+                ->visible(fn (): bool => (bool) auth()->user()?->can('edit_news'))
+                ->requiresConfirmation()
+                ->action(function (News $record, array $data): void {
+                    try {
+                        abort_unless(auth()->user()?->can('edit_news'), 403);
+                        app(NewsArticleGenerator::class)->generate($record, (string) $data['source_notes'], (int) auth()->id());
+                        Notification::make()->title('Article draft generated')
+                            ->body('The draft remains unpublished and requires editorial approval.')->success()->send();
+                    } catch (Throwable $e) {
+                        Notification::make()->title('Article generation blocked')->body($e->getMessage())->danger()->send();
+                    }
+                }),
             Tables\Actions\Action::make('approveArticle')
                 ->label('Approve article')->icon('heroicon-o-check-circle')->requiresConfirmation()
                 ->visible(fn (News $record): bool => (bool) auth()->user()?->can('edit_news') && $record->editorial_status !== 'approved')
