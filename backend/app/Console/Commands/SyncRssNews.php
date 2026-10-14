@@ -11,11 +11,6 @@ use Illuminate\Support\Str;
 
 class SyncRssNews extends Command
 {
-    /**
-     * Imports only RSS-provided summaries with attribution and source links.
-     * New items are pending editorial drafts. Existing published stories are
-     * left untouched by routine feed syncs.
-     */
     protected $signature = 'news:sync-rss {--dry-run : Show what would be imported without writing anything}';
     protected $description = 'Sync TechCrunch RSS feeds into the news table as editorial drafts';
 
@@ -27,7 +22,7 @@ class SyncRssNews extends Command
     public function handle(): int
     {
         $dryRun = (bool) $this->option('dry-run');
-        $created = $updated = $failed = 0;
+        $created = $updated = $skipped = $failed = 0;
 
         foreach ($this->feeds as $feed) {
             $this->info("Fetching {$feed['url']} ...");
@@ -92,15 +87,17 @@ class SyncRssNews extends Command
                 ];
 
                 if ($news) {
-                    // A routine feed sync must never alter or unpublish a story
-                    // that an editor has already published.
-                    if ($news->status !== 'published') {
+                    // Refresh only untouched drafts. Preserve published or reviewed work.
+                    if ($news->status === 'pending' && in_array($news->editorial_status, ['draft', 'needs_work'], true)) {
                         $news->update($attributes);
+                        $updated++;
+                    } else {
+                        $skipped++;
                     }
-                    $updated++;
                 } else {
                     $attributes['external_id'] = $guid;
                     $attributes['status'] = 'pending';
+                    $attributes['editorial_status'] = 'draft';
                     News::create($attributes);
                     $created++;
                 }
@@ -114,7 +111,7 @@ class SyncRssNews extends Command
             return self::SUCCESS;
         }
 
-        $this->info("Done. Created: {$created}, Updated/skipped-existing: {$updated}, Feed failures: {$failed}.");
+        $this->info("Done. Created: {$created}, Updated: {$updated}, Skipped: {$skipped}, Feed failures: {$failed}.");
         return $failed > 0 ? self::FAILURE : self::SUCCESS;
     }
 
