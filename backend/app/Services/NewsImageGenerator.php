@@ -90,6 +90,16 @@ class NewsImageGenerator
                 'image_review_notes' => null,
             ])->save();
 
+            NewsEditorialEvent::create([
+                'news_id' => $news->id,
+                'user_id' => $userId,
+                'event_type' => 'image_generated',
+                'from_status' => null,
+                'to_status' => 'pending',
+                'notes' => 'AI-generated editorial illustration; requires human image approval.',
+                'metadata' => ['generation_id' => $generation->id, 'model' => $generation->model, 'prompt' => $prompt],
+            ]);
+
             return $generation->fresh();
         } catch (Throwable $e) {
             $generation->update(['status' => 'failed', 'error_message' => mb_substr($e->getMessage(), 0, 2000)]);
