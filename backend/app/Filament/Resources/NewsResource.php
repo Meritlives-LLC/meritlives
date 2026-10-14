@@ -5,11 +5,14 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\NewsResource\Pages;
 use App\Models\News;
 use App\Models\Category;
+use App\Services\EditorialWorkflow;
 use Filament\Forms;
 use Filament\Forms\Form;
+use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Throwable;
 
 class NewsResource extends Resource
 {
@@ -55,10 +58,16 @@ class NewsResource extends Resource
                 ->directory('news'),
             Forms\Components\TextInput::make('image_url')->url(),
             Forms\Components\DateTimePicker::make('published_at'),
-            Forms\Components\TextInput::make('external_id'),
-            Forms\Components\Select::make('status')->options([
-                'pending'=>'Pending','published'=>'Published','archived'=>'Archived',
-            ])->required(),
+            Forms\Components\TextInput::make('external_id')->disabled()->dehydrated(),
+            Forms\Components\Placeholder::make('status_display')
+                ->label('Publication status')
+                ->content(fn (?News $record): string => $record?->status ?? 'pending'),
+            Forms\Components\Placeholder::make('editorial_status_display')
+                ->label('Article approval')
+                ->content(fn (?News $record): string => $record?->editorial_status ?? 'draft'),
+            Forms\Components\Placeholder::make('image_status_display')
+                ->label('Image approval')
+                ->content(fn (?News $record): string => $record?->image_review_status ?? 'pending'),
             Forms\Components\Toggle::make('featured'),
         ])->columns(2);
     }
@@ -71,14 +80,67 @@ class NewsResource extends Resource
             Tables\Columns\TextColumn::make('author_name')->label('Author')->searchable(),
             Tables\Columns\TextColumn::make('category.name')->sortable(),
             Tables\Columns\TextColumn::make('status')->badge(),
+            Tables\Columns\TextColumn::make('editorial_status')->label('Article review')->badge(),
+            Tables\Columns\TextColumn::make('image_review_status')->label('Image review')->badge(),
             Tables\Columns\TextColumn::make('published_at')->dateTime()->sortable(),
         ])->filters([
             Tables\Filters\SelectFilter::make('status')->options([
                 'pending'=>'Pending','published'=>'Published','archived'=>'Archived',
             ]),
+            Tables\Filters\SelectFilter::make('editorial_status')->options([
+                'draft'=>'Draft','pending_review'=>'Pending review','approved'=>'Approved','needs_work'=>'Needs work',
+            ]),
             Tables\Filters\SelectFilter::make('category_id')->relationship('category','name'),
         ])->actions([
             Tables\Actions\EditAction::make(),
+            Tables\Actions\Action::make('approveArticle')
+                ->label('Approve article')
+                ->icon('heroicon-o-check-circle')
+                ->requiresConfirmation()
+                ->visible(fn (News $record): bool => $record->editorial_status !== 'approved')
+                ->action(function (News $record): void {
+                    try {
+                        app(EditorialWorkflow::class)->approveArticle($record, (int) auth()->id());
+                        Notification::make()->title('Article approved')->success()->send();
+                    } catch (Throwable $e) {
+                        Notification::make()->title('Article not approved')->body($e->getMessage())->danger()->send();
+                    }
+                }),
+            Tables\Actions\Action::make('approveImage')
+                ->label('Approve image')
+                ->icon('heroicon-o-photo')
+                ->requiresConfirmation()
+                ->visible(fn (News $record): bool => $record->image_review_status !== 'approved')
+                ->action(function (News $record): void {
+                    try {
+                        app(EditorialWorkflow::class)->approveImage($record, (int) auth()->id());
+                        Notification::make()->title('Image approved')->success()->send();
+                    } catch (Throwable $e) {
+                        Notification::make()->title('Image not approved')->body($e->getMessage())->danger()->send();
+                    }
+                }),
+            Tables\Actions\Action::make('publish')
+                ->label('Publish')
+                ->icon('heroicon-o-megaphone')
+                ->color('success')
+                ->requiresConfirmation()
+                ->visible(fn (News $record): bool => $record->status !== 'published')
+                ->action(function (News $record): void {
+                    try {
+                        app(EditorialWorkflow::class)->publish($record);
+                        Notification::make()->title('Article published')->success()->send();
+                    } catch (Throwable $e) {
+                        Notification::make()->title('Publishing blocked')->body($e->getMessage())->danger()->send();
+                    }
+                }),
+            Tables\Actions\Action::make('returnForChanges')
+                ->label('Return for changes')
+                ->icon('heroicon-o-arrow-uturn-left')
+                ->form([Forms\Components\Textarea::make('notes')->required()->maxLength(2000)])
+                ->action(function (News $record, array $data): void {
+                    app(EditorialWorkflow::class)->returnForChanges($record, (int) auth()->id(), $data['notes']);
+                    Notification::make()->title('Returned for changes')->warning()->send();
+                }),
         ])->bulkActions([
             Tables\Actions\DeleteBulkAction::make(),
         ]);
