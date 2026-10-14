@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use App\Models\Category;
 use App\Models\News;
+use App\Services\NewsHeadlineDeduplicator;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
@@ -95,7 +96,6 @@ class ImportWordPressNews extends Command
             if ($dryRun) continue;
             $news = News::where('external_id', (string) $post->ID)->first();
             if ($news) {
-                // Refresh only untouched drafts; never replace reviewed work.
                 if ($news->status === 'pending' && in_array($news->editorial_status, ['draft', 'needs_work'], true)) {
                     $news->update($attributes);
                     $updated++;
@@ -103,6 +103,12 @@ class ImportWordPressNews extends Command
                     $skipped++;
                 }
             } else {
+                $duplicate = app(NewsHeadlineDeduplicator::class)->findDuplicate((string) $post->post_title);
+                if ($duplicate) {
+                    $skipped++;
+                    continue;
+                }
+
                 $attributes['external_id'] = (string) $post->ID;
                 $attributes['status'] = 'pending';
                 $attributes['editorial_status'] = 'draft';
@@ -116,7 +122,7 @@ class ImportWordPressNews extends Command
             $this->info("Dry run: {$posts->count()} post(s) would be processed ({$skipped} skipped for missing title).");
             return self::SUCCESS;
         }
-        $this->info("Done. Created: {$created}, Updated: {$updated}, Skipped: {$skipped}.");
+        $this->info("Done. Created: {$created}, Updated: {$updated}, Skipped/duplicates: {$skipped}.");
         if ($imageFailures) {
             $this->warn(count($imageFailures).' image(s) failed to download and were left pointing at the original WordPress URL:');
             foreach (array_unique($imageFailures) as $url) $this->line("  - {$url}");
