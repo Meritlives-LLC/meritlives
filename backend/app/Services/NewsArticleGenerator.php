@@ -121,6 +121,16 @@ class NewsArticleGenerator
                 'output_tokens' => (int) ($response->json('usage.completion_tokens') ?? 0),
             ]);
 
+            NewsEditorialEvent::create([
+                'news_id' => $news->id,
+                'user_id' => $userId,
+                'event_type' => 'article_draft_generated',
+                'from_status' => 'draft',
+                'to_status' => 'pending_review',
+                'notes' => 'AI-generated article draft; factual verification and editor approval required.',
+                'metadata' => ['generation_id' => $generation->id, 'model' => $generation->model, 'source_material_hash' => $generation->source_material_hash],
+            ]);
+
             return $generation->fresh();
         } catch (Throwable $e) {
             $generation->update([
