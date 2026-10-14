@@ -30,43 +30,28 @@ class NewsResource extends Resource
                 ->options(function (?News $record): array {
                     $approved = Category::query()
                         ->whereIn('name', ['Technology', 'Business', 'Digital Innovation'])
-                        ->orderBy('name')
-                        ->pluck('name', 'id')
-                        ->all();
-
+                        ->orderBy('name')->pluck('name', 'id')->all();
                     if ($record?->category_id && ! isset($approved[$record->category_id])) {
                         $legacy = Category::find($record->category_id);
-                        if ($legacy) {
-                            $approved[$legacy->id] = '[Existing] '.$legacy->name;
-                        }
+                        if ($legacy) $approved[$legacy->id] = '[Existing] '.$legacy->name;
                     }
-
                     return $approved;
-                })
-                ->searchable(),
+                })->searchable(),
             Forms\Components\Textarea::make('excerpt')->rows(4)->columnSpanFull(),
             Forms\Components\RichEditor::make('content')->columnSpanFull(),
             Forms\Components\TextInput::make('author_name')->maxLength(255),
             Forms\Components\TextInput::make('source_name')->required(),
             Forms\Components\TextInput::make('source_url')->url()->required(),
-            Forms\Components\FileUpload::make('featured_image')
-                ->label('Featured Image')
-                ->image()
-                ->maxSize(5120)
-                ->disk('public')
-                ->visibility('public')
-                ->directory('news'),
+            Forms\Components\FileUpload::make('featured_image')->label('Featured Image')->image()->maxSize(5120)
+                ->disk('public')->visibility('public')->directory('news'),
             Forms\Components\TextInput::make('image_url')->url(),
             Forms\Components\DateTimePicker::make('published_at'),
             Forms\Components\TextInput::make('external_id')->disabled()->dehydrated(),
-            Forms\Components\Placeholder::make('status_display')
-                ->label('Publication status')
+            Forms\Components\Placeholder::make('status_display')->label('Publication status')
                 ->content(fn (?News $record): string => $record?->status ?? 'pending'),
-            Forms\Components\Placeholder::make('editorial_status_display')
-                ->label('Article approval')
+            Forms\Components\Placeholder::make('editorial_status_display')->label('Article approval')
                 ->content(fn (?News $record): string => $record?->editorial_status ?? 'draft'),
-            Forms\Components\Placeholder::make('image_status_display')
-                ->label('Image approval')
+            Forms\Components\Placeholder::make('image_status_display')->label('Image approval')
                 ->content(fn (?News $record): string => $record?->image_review_status ?? 'pending'),
             Forms\Components\Toggle::make('featured'),
         ])->columns(2);
@@ -92,12 +77,11 @@ class NewsResource extends Resource
             ]),
             Tables\Filters\SelectFilter::make('category_id')->relationship('category','name'),
         ])->actions([
-            Tables\Actions\EditAction::make(),
+            Tables\Actions\EditAction::make()
+                ->visible(fn (): bool => (bool) auth()->user()?->can('edit_news')),
             Tables\Actions\Action::make('approveArticle')
-                ->label('Approve article')
-                ->icon('heroicon-o-check-circle')
-                ->requiresConfirmation()
-                ->visible(fn (News $record): bool => $record->editorial_status !== 'approved')
+                ->label('Approve article')->icon('heroicon-o-check-circle')->requiresConfirmation()
+                ->visible(fn (News $record): bool => (bool) auth()->user()?->can('edit_news') && $record->editorial_status !== 'approved')
                 ->action(function (News $record): void {
                     try {
                         app(EditorialWorkflow::class)->approveArticle($record, (int) auth()->id());
@@ -107,12 +91,11 @@ class NewsResource extends Resource
                     }
                 }),
             Tables\Actions\Action::make('approveImage')
-                ->label('Approve image')
-                ->icon('heroicon-o-photo')
-                ->requiresConfirmation()
-                ->visible(fn (News $record): bool => $record->image_review_status !== 'approved')
+                ->label('Approve image')->icon('heroicon-o-photo')->requiresConfirmation()
+                ->visible(fn (News $record): bool => (bool) (auth()->user()?->can('manage_media') || auth()->user()?->can('edit_news')) && $record->image_review_status !== 'approved')
                 ->action(function (News $record): void {
                     try {
+                        abort_unless(auth()->user()?->can('manage_media') || auth()->user()?->can('edit_news'), 403);
                         app(EditorialWorkflow::class)->approveImage($record, (int) auth()->id());
                         Notification::make()->title('Image approved')->success()->send();
                     } catch (Throwable $e) {
@@ -120,13 +103,11 @@ class NewsResource extends Resource
                     }
                 }),
             Tables\Actions\Action::make('publish')
-                ->label('Publish')
-                ->icon('heroicon-o-megaphone')
-                ->color('success')
-                ->requiresConfirmation()
-                ->visible(fn (News $record): bool => $record->status !== 'published')
+                ->label('Publish')->icon('heroicon-o-megaphone')->color('success')->requiresConfirmation()
+                ->visible(fn (News $record): bool => (bool) auth()->user()?->can('edit_news') && $record->status !== 'published')
                 ->action(function (News $record): void {
                     try {
+                        abort_unless(auth()->user()?->can('edit_news'), 403);
                         app(EditorialWorkflow::class)->publish($record);
                         Notification::make()->title('Article published')->success()->send();
                     } catch (Throwable $e) {
@@ -134,15 +115,16 @@ class NewsResource extends Resource
                     }
                 }),
             Tables\Actions\Action::make('returnForChanges')
-                ->label('Return for changes')
-                ->icon('heroicon-o-arrow-uturn-left')
+                ->label('Return for changes')->icon('heroicon-o-arrow-uturn-left')
+                ->visible(fn (): bool => (bool) auth()->user()?->can('edit_news'))
                 ->form([Forms\Components\Textarea::make('notes')->required()->maxLength(2000)])
                 ->action(function (News $record, array $data): void {
+                    abort_unless(auth()->user()?->can('edit_news'), 403);
                     app(EditorialWorkflow::class)->returnForChanges($record, (int) auth()->id(), $data['notes']);
                     Notification::make()->title('Returned for changes')->warning()->send();
                 }),
         ])->bulkActions([
-            Tables\Actions\DeleteBulkAction::make(),
+            Tables\Actions\DeleteBulkAction::make()->visible(fn (): bool => (bool) auth()->user()?->can('delete_news')),
         ]);
     }
 
