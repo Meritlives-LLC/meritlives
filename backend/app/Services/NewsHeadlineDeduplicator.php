@@ -9,8 +9,8 @@ class NewsHeadlineDeduplicator
 {
     /**
      * Find an exact or near-duplicate recent headline. This is a review aid,
-     * not a factual-equivalence detector; editors can still choose to keep
-     * distinct stories that happen to have similar titles.
+     * not a factual-equivalence detector; editors can keep distinct stories
+     * that happen to have similar titles.
      */
     public function findDuplicate(string $title, ?int $ignoreNewsId = null): ?News
     {
@@ -21,10 +21,9 @@ class NewsHeadlineDeduplicator
 
         $query = News::query()->where('created_at', '>=', now()->subDays(45));
         if ($ignoreNewsId) {
-            $query->whereKeyNot($ignoreNewsId);
+            $query->where('id', '<>', $ignoreNewsId);
         }
 
-        // Exact title matches are cheap and should be caught before fuzzy checks.
         $exact = (clone $query)->whereRaw('LOWER(title) = ?', [mb_strtolower(trim($title))])->first();
         if ($exact) {
             return $exact;
