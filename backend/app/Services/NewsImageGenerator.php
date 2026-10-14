@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\News;
 use App\Models\NewsImageGeneration;
+use App\Models\NewsEditorialEvent;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
 use RuntimeException;
