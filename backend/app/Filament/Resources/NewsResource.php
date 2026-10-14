@@ -163,7 +163,7 @@ class NewsResource extends Resource
                 ->action(function (News $record): void {
                     try {
                         abort_unless(auth()->user()?->can('edit_news'), 403);
-                        app(EditorialWorkflow::class)->publish($record);
+                        app(EditorialWorkflow::class)->publish($record, (int) auth()->id());
                         Notification::make()->title('Article published')->success()->send();
                     } catch (Throwable $e) {
                         Notification::make()->title('Publishing blocked')->body($e->getMessage())->danger()->send();
