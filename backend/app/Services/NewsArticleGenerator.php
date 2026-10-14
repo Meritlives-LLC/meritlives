@@ -71,7 +71,7 @@ class NewsArticleGenerator
                     'max_tokens' => max(600, (int) config('openai_articles.max_output_tokens', 1800)),
                     'response_format' => ['type' => 'json_object'],
                     'messages' => [
-                        ['role' => 'system', 'content' => 'You are a cautious editorial assistant for MERITLIVES. Produce an unpublished draft only. Use only facts explicitly present in the supplied source material. Do not invent names, quotes, dates, numbers, events, causal claims, or source details. If the material cannot support a useful article, return {"insufficient_source_material":true,"reason":"..."} instead of writing an article. Never claim you independently verified facts. Paraphrase; do not copy long source passages. Return JSON with keys: insufficient_source_material (boolean), reason (string), title (string), excerpt (string), content_html (string). Content HTML may use only p, h2, h3, ul, ol, li, strong, em. Target 350–600 words only when supported by the supplied evidence.'),
+                        ['role' => 'system', 'content' => 'You are a cautious editorial assistant for MERITLIVES. Produce an unpublished draft only. Use only facts explicitly present in the supplied source material. Do not invent names, quotes, dates, numbers, events, causal claims, or source details. If the material cannot support a useful article, return {"insufficient_source_material":true,"reason":"..."} instead of writing an article. Never claim you independently verified facts. Paraphrase; do not copy long source passages. Return JSON with keys: insufficient_source_material (boolean), reason (string), title (string), excerpt (string), content_html (string). Content HTML may use only p, h2, h3, ul, ol, li, strong, em. Target 350–600 words only when supported by the supplied evidence.'],
                         ['role' => 'user', 'content' => "Create a careful news draft using the source material below. Keep source attribution and preserve uncertainty. Do not publish it.\n\n".$sourceMaterial],
                     ],
                 ]);
@@ -95,14 +95,15 @@ class NewsArticleGenerator
             $html = trim((string) ($draft['content_html'] ?? ''));
             $allowedTags = '<p><h2><h3><ul><ol><li><strong><em>';
             $html = strip_tags($html, $allowedTags);
+            // Remove every attribute from retained tags; the model cannot inject
+            // event handlers, styles, links, or arbitrary attributes into HTML.
+            $html = preg_replace('/<(\/?)((?:p|h2|h3|ul|ol|li|strong|em))\b[^>]*>/i', '<$1$2>', $html) ?? '';
             $draftWords = str_word_count(strip_tags($html));
 
             if (mb_strlen($title) < 15 || mb_strlen($title) > 180 || $excerpt === '' || $draftWords < (int) config('editorial.minimum_word_count', 300)) {
                 throw new RuntimeException('Generated draft did not meet minimum headline, excerpt, and content standards. Add more verified source material and retry.');
             }
 
-            // Save as an unapproved draft. The article must still be reviewed,
-            // and its image requires a separate approval before publishing.
             $news->forceFill([
                 'title' => $title,
                 'slug' => Str::slug($title).'-'.substr(md5($generation->id.'-'.$sourceMaterial), 0, 8),
