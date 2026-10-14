@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use App\Models\Category;
 use App\Models\News;
+use App\Services\NewsHeadlineDeduplicator;
 use Carbon\Carbon;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Http;
@@ -87,7 +88,6 @@ class SyncRssNews extends Command
                 ];
 
                 if ($news) {
-                    // Refresh only untouched drafts. Preserve published or reviewed work.
                     if ($news->status === 'pending' && in_array($news->editorial_status, ['draft', 'needs_work'], true)) {
                         $news->update($attributes);
                         $updated++;
@@ -95,6 +95,11 @@ class SyncRssNews extends Command
                         $skipped++;
                     }
                 } else {
+                    $duplicate = app(NewsHeadlineDeduplicator::class)->findDuplicate($title);
+                    if ($duplicate) {
+                        $skipped++;
+                        continue;
+                    }
                     $attributes['external_id'] = $guid;
                     $attributes['status'] = 'pending';
                     $attributes['editorial_status'] = 'draft';
@@ -111,7 +116,7 @@ class SyncRssNews extends Command
             return self::SUCCESS;
         }
 
-        $this->info("Done. Created: {$created}, Updated: {$updated}, Skipped: {$skipped}, Feed failures: {$failed}.");
+        $this->info("Done. Created: {$created}, Updated: {$updated}, Skipped/duplicates: {$skipped}, Feed failures: {$failed}.");
         return $failed > 0 ? self::FAILURE : self::SUCCESS;
     }
 
