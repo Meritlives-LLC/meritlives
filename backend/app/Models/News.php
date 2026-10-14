@@ -40,10 +40,19 @@ class News extends Model
         static::updating(function (News $news): void {
             $articleFields = ['title', 'slug', 'excerpt', 'content', 'category_id', 'source_name', 'source_url'];
             if ($news->isDirty($articleFields)) {
-                $news->editorial_status = 'needs_work';
+                // Generated drafts may explicitly enter pending_review. Ordinary
+                // edits to previously approved copy must go back to needs_work.
+                if ($news->editorial_status !== 'pending_review') {
+                    $news->editorial_status = 'needs_work';
+                }
                 $news->article_reviewed_by = null;
                 $news->article_reviewed_at = null;
                 $news->article_review_notes = null;
+                // Re-check the illustration when story context changes.
+                $news->image_review_status = 'pending';
+                $news->image_reviewed_by = null;
+                $news->image_reviewed_at = null;
+                $news->image_review_notes = null;
                 if ($news->status === 'published') {
                     $news->status = 'pending';
                 }
