@@ -4,7 +4,7 @@ namespace Tests\Unit;
 
 use App\Models\News;
 use App\Services\EditorialReadiness;
-use PHPUnit\Framework\TestCase;
+use Tests\TestCase;
 
 class EditorialReadinessTest extends TestCase
 {
