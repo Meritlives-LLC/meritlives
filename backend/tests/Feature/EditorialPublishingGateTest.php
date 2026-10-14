@@ -45,12 +45,11 @@ class EditorialPublishingGateTest extends TestCase
         $news->save();
     }
 
-    public function test_article_edits_revoke_article_approval_and_unpublish(): void
+    public function test_article_edits_revoke_article_and_image_approvals_and_unpublish(): void
     {
         $news = $this->makeNews([
             'status' => 'published',
             'editorial_status' => 'approved',
-            'article_reviewed_by' => null,
             'article_reviewed_at' => now(),
             'image_review_status' => 'approved',
             'image_reviewed_at' => now(),
@@ -58,11 +57,13 @@ class EditorialPublishingGateTest extends TestCase
 
         $news->title = 'Updated headline that requires a new review';
         $news->save();
+        $fresh = $news->fresh();
 
-        $this->assertSame('pending', $news->fresh()->status);
-        $this->assertSame('needs_work', $news->fresh()->editorial_status);
-        $this->assertNull($news->fresh()->article_reviewed_at);
-        $this->assertSame('approved', $news->fresh()->image_review_status);
+        $this->assertSame('pending', $fresh->status);
+        $this->assertSame('needs_work', $fresh->editorial_status);
+        $this->assertNull($fresh->article_reviewed_at);
+        $this->assertSame('pending', $fresh->image_review_status);
+        $this->assertNull($fresh->image_reviewed_at);
     }
 
     public function test_image_edits_revoke_image_approval_and_unpublish(): void
@@ -77,10 +78,11 @@ class EditorialPublishingGateTest extends TestCase
 
         $news->image_url = 'https://example.com/replacement-image.jpg';
         $news->save();
+        $fresh = $news->fresh();
 
-        $this->assertSame('pending', $news->fresh()->status);
-        $this->assertSame('approved', $news->fresh()->editorial_status);
-        $this->assertSame('pending', $news->fresh()->image_review_status);
-        $this->assertNull($news->fresh()->image_reviewed_at);
+        $this->assertSame('pending', $fresh->status);
+        $this->assertSame('approved', $fresh->editorial_status);
+        $this->assertSame('pending', $fresh->image_review_status);
+        $this->assertNull($fresh->image_reviewed_at);
     }
 }
