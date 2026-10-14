@@ -95,9 +95,13 @@ class ImportWordPressNews extends Command
             if ($dryRun) continue;
             $news = News::where('external_id', (string) $post->ID)->first();
             if ($news) {
-                // Never overwrite approved editorial copy during a repeat import.
-                if ($news->status !== 'published') $news->update($attributes);
-                $updated++;
+                // Refresh only untouched drafts; never replace reviewed work.
+                if ($news->status === 'pending' && in_array($news->editorial_status, ['draft', 'needs_work'], true)) {
+                    $news->update($attributes);
+                    $updated++;
+                } else {
+                    $skipped++;
+                }
             } else {
                 $attributes['external_id'] = (string) $post->ID;
                 $attributes['status'] = 'pending';
