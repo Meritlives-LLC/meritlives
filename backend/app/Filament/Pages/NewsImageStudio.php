@@ -11,6 +11,7 @@ use Filament\Forms\Contracts\HasForms;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Filament\Forms\Form;
+use Illuminate\Support\Facades\Storage;
 use Throwable;
 
 class NewsImageStudio extends Page implements HasForms
@@ -26,12 +27,14 @@ class NewsImageStudio extends Page implements HasForms
     public ?array $data = [];
     public ?string $latestImageUrl = null;
 
+    public static function canAccess(): bool
+    {
+        return (bool) (auth()->user()?->can('manage_media') || auth()->user()?->can('edit_news'));
+    }
+
     public function mount(): void
     {
-        $this->form->fill([
-            'news_id' => null,
-            'prompt' => '',
-        ]);
+        $this->form->fill(['news_id' => null, 'prompt' => '']);
     }
 
     public function form(Form $form): Form
@@ -53,22 +56,15 @@ class NewsImageStudio extends Page implements HasForms
 
     public function generate(): void
     {
+        abort_unless(auth()->user()?->can('manage_media') || auth()->user()?->can('edit_news'), 403);
         $state = $this->form->getState();
         $news = News::findOrFail((int) $state['news_id']);
 
         try {
-            $generation = app(NewsImageGenerator::class)->generate(
-                $news,
-                (string) $state['prompt'],
-                (int) auth()->id()
-            );
-
-            $this->latestImageUrl = \Illuminate\Support\Facades\Storage::disk('public')->url($generation->image_path);
-            Notification::make()
-                ->title('Image generated and queued for approval')
-                ->body('The image is not approved or published yet.')
-                ->success()
-                ->send();
+            $generation = app(NewsImageGenerator::class)->generate($news, (string) $state['prompt'], (int) auth()->id());
+            $this->latestImageUrl = Storage::disk('public')->url($generation->image_path);
+            Notification::make()->title('Image generated and queued for approval')
+                ->body('The image is not approved or published yet.')->success()->send();
         } catch (Throwable $e) {
             report($e);
             Notification::make()->title('Image generation failed')->body($e->getMessage())->danger()->send();
