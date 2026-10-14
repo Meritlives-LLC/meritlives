@@ -105,6 +105,14 @@ class NewsResource extends Resource
             Tables\Filters\SelectFilter::make('category_id')->relationship('category','name'),
         ])->actions([
             Tables\Actions\EditAction::make()->visible(fn (): bool => (bool) auth()->user()?->can('edit_news')),
+            Tables\Actions\Action::make('editorialHistory')
+                ->label('Editorial history')
+                ->icon('heroicon-o-clock')
+                ->modalHeading('Editorial history')
+                ->modalSubmitAction(false)
+                ->modalContent(fn (News $record) => view('filament.news-editorial-history', [
+                    'events' => $record->editorialEvents()->with('user')->get(),
+                ])),
             Tables\Actions\Action::make('generateArticleDraft')
                 ->label('Generate article draft')->icon('heroicon-o-sparkles')
                 ->form([
