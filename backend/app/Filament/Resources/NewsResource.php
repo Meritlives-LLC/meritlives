@@ -13,6 +13,7 @@ use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Model;
 use Throwable;
 
 class NewsResource extends Resource
@@ -20,6 +21,31 @@ class NewsResource extends Resource
     protected static ?string $model = News::class;
     protected static ?string $navigationIcon = 'heroicon-o-newspaper';
     protected static ?string $navigationGroup = 'Content';
+
+    public static function canViewAny(): bool
+    {
+        return (bool) auth()->user()?->can('view_news');
+    }
+
+    public static function canCreate(): bool
+    {
+        return (bool) auth()->user()?->can('create_news');
+    }
+
+    public static function canEdit(Model $record): bool
+    {
+        return (bool) auth()->user()?->can('edit_news');
+    }
+
+    public static function canDelete(Model $record): bool
+    {
+        return (bool) auth()->user()?->can('delete_news');
+    }
+
+    public static function canDeleteAny(): bool
+    {
+        return (bool) auth()->user()?->can('delete_news');
+    }
 
     public static function form(Form $form): Form
     {
@@ -34,7 +60,7 @@ class NewsResource extends Resource
                         ->orderBy('name')->pluck('name', 'id')->all();
                     if ($record?->category_id && ! isset($approved[$record->category_id])) {
                         $legacy = Category::find($record->category_id);
-                        if ($legacy) $approved[$legacy->id] = '[Existing] '.$legacy->name;
+                        if ($legacy) $approved[$record->category_id] = '[Existing] '.$legacy->name;
                     }
                     return $approved;
                 })->searchable(),
@@ -78,11 +104,9 @@ class NewsResource extends Resource
             ]),
             Tables\Filters\SelectFilter::make('category_id')->relationship('category','name'),
         ])->actions([
-            Tables\Actions\EditAction::make()
-                ->visible(fn (): bool => (bool) auth()->user()?->can('edit_news')),
+            Tables\Actions\EditAction::make()->visible(fn (): bool => (bool) auth()->user()?->can('edit_news')),
             Tables\Actions\Action::make('generateArticleDraft')
-                ->label('Generate article draft')
-                ->icon('heroicon-o-sparkles')
+                ->label('Generate article draft')->icon('heroicon-o-sparkles')
                 ->form([
                     Forms\Components\Textarea::make('source_notes')
                         ->label('Verified source notes')
@@ -106,6 +130,7 @@ class NewsResource extends Resource
                 ->visible(fn (News $record): bool => (bool) auth()->user()?->can('edit_news') && $record->editorial_status !== 'approved')
                 ->action(function (News $record): void {
                     try {
+                        abort_unless(auth()->user()?->can('edit_news'), 403);
                         app(EditorialWorkflow::class)->approveArticle($record, (int) auth()->id());
                         Notification::make()->title('Article approved')->success()->send();
                     } catch (Throwable $e) {
