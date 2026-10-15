@@ -42,7 +42,7 @@ jobs:
           php artisan key:generate --force
           mkdir -p storage/framework/cache storage/framework/sessions storage/framework/views bootstrap/cache
       - name: Run editorial readiness and publishing gate tests
-        run: php artisan test --filter='EditorialReadinessTest|EditorialPublishingGateTest|EditorialWorkflowAuditTest|NewsArticleGeneratorSafetyTest|NewsHeadlineDeduplicatorTest'
+        run: php artisan test --filter='EditorialReadinessTest|EditorialPublishingGateTest|EditorialWorkflowAuditTest|NewsArticleGeneratorSafetyTest|NewsHeadlineDeduplicatorTest|PublicNewsEditorialVisibilityTest'
 
   full-suite:
     name: Full backend test suite
