@@ -67,6 +67,7 @@ class WatchCollectorTest extends TestCase
 
         $result = app(\App\Services\YouTube\WatchCollector::class)->collect();
 
+        $this->assertSame(0, $result['totals']['failed'], json_encode($result['sources']));
         $this->assertSame(1, $result['totals']['found']);
         $this->assertSame(1, $result['totals']['skipped']);
         $this->assertDatabaseCount('watch_videos', 0);
@@ -89,7 +90,7 @@ class WatchCollectorTest extends TestCase
 
         $result = app(\App\Services\YouTube\WatchCollector::class)->collect();
 
-        $this->assertSame(1, $result['totals']['failed']);
+        $this->assertSame(1, $result['totals']['failed'], json_encode($result['sources']));
         $this->assertSame(1, $result['totals']['new']);
         $this->assertDatabaseCount('watch_videos', 1);
     }
