@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\News;
 use App\Models\NewsImageGeneration;
 use App\Models\NewsEditorialEvent;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
 use RuntimeException;
@@ -28,29 +29,33 @@ class NewsImageGenerator
         $estimate = max(0.01, (float) config('openai_images.estimated_cost_per_image_usd', 0.10));
         $dailyLimit = max(1, (int) config('openai_images.daily_limit', 10));
         $monthlyBudget = max(0, (float) config('openai_images.monthly_budget_usd', 5));
-        $countedStatuses = ['pending', 'succeeded', 'failed'];
-        $todayCount = NewsImageGeneration::whereDate('created_at', today())
-            ->whereIn('status', $countedStatuses)->count();
-        $monthSpend = (float) NewsImageGeneration::whereYear('created_at', now()->year)
-            ->whereMonth('created_at', now()->month)
-            ->whereIn('status', $countedStatuses)->sum('estimated_cost_usd');
+        // Reserve budget atomically before making the external request. The pending
+        // reservation counts toward both limits while the provider call is in flight.
+        $generation = Cache::lock('news-ai-image-budget:'.now()->format('Y-m'), 30)->block(5, function () use ($news, $userId, $prompt, $estimate, $dailyLimit, $monthlyBudget): NewsImageGeneration {
+            $countedStatuses = ['pending', 'succeeded', 'failed'];
+            $todayCount = NewsImageGeneration::whereDate('created_at', today())
+                ->whereIn('status', $countedStatuses)->count();
+            $monthSpend = (float) NewsImageGeneration::whereYear('created_at', now()->year)
+                ->whereMonth('created_at', now()->month)
+                ->whereIn('status', $countedStatuses)->sum('estimated_cost_usd');
 
-        if ($todayCount >= $dailyLimit) {
-            throw new RuntimeException('The daily image generation limit has been reached.');
-        }
-        if ($monthSpend + $estimate > $monthlyBudget) {
-            throw new RuntimeException('The configured monthly image budget would be exceeded.');
-        }
+            if ($todayCount >= $dailyLimit) {
+                throw new RuntimeException('The daily image generation limit has been reached.');
+            }
+            if ($monthSpend + $estimate > $monthlyBudget) {
+                throw new RuntimeException('The configured monthly image budget would be exceeded.');
+            }
 
-        $generation = NewsImageGeneration::create([
-            'news_id' => $news->id,
-            'user_id' => $userId,
-            'prompt' => $prompt,
-            'model' => (string) config('openai_images.model', 'gpt-image-2'),
-            'quality' => (string) config('openai_images.quality', 'low'),
-            'estimated_cost_usd' => $estimate,
-            'status' => 'pending',
-        ]);
+            return NewsImageGeneration::create([
+                'news_id' => $news->id,
+                'user_id' => $userId,
+                'prompt' => $prompt,
+                'model' => (string) config('openai_images.model', 'gpt-image-2'),
+                'quality' => (string) config('openai_images.quality', 'low'),
+                'estimated_cost_usd' => $estimate,
+                'status' => 'pending',
+            ]);
+        });
 
         try {
             $response = Http::withToken($apiKey)->acceptJson()
