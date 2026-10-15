@@ -18,6 +18,11 @@ return Application::configure(basePath: dirname(__DIR__))
         commands: __DIR__.'/../routes/console.php',
         health: '/up',
     )
+    ->withCommands([
+        \\App\\Console\\Commands\\CollectWatchVideos::class,
+        \\App\\Console\\Commands\\SyncRssNews::class,
+        \\App\\Console\\Commands\\ImportWordPressNews::class,
+    ])
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias([
             'force.json' => ForceJson::class,
