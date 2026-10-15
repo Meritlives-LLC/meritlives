@@ -77,9 +77,13 @@ class WatchCollectorTest extends TestCase
         $this->source('UCaaaaaaaaaaaaaaaaaaaaaa', 'Broken source');
         $this->source('UCbbbbbbbbbbbbbbbbbbbbbb', 'Healthy source');
         Http::fake(function (Request $request) {
-            if (parse_url($request->url(), PHP_URL_PATH) === '/youtube/v3/channels' && $request->data()['id'] === 'UCaaaaaaaaaaaaaaaaaaaaaa') {
+            $path = parse_url($request->url(), PHP_URL_PATH);
+            parse_str((string) parse_url($request->url(), PHP_URL_QUERY), $query);
+
+            if ($path === '/youtube/v3/channels' && ($query['id'] ?? null) === 'UCaaaaaaaaaaaaaaaaaaaaaa') {
                 return Http::response(['error' => 'failure'], 500);
             }
+
             return $this->responseFor($request);
         });
 
