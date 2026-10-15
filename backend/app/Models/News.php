@@ -27,7 +27,7 @@ class News extends Model
     protected static function booted(): void
     {
         static::saving(function (News $news): void {
-            if ($news->status === 'published' && $news->isDirty('status')) {
+            if ($news->status === 'published') {
                 if ($news->editorial_status !== 'approved'
                     || $news->image_review_status !== 'approved'
                     || ! $news->article_reviewed_at
