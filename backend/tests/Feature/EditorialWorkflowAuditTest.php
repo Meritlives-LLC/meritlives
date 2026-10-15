@@ -88,13 +88,13 @@ class EditorialWorkflowAuditTest extends TestCase
 
     public function test_ai_article_generator_cannot_approve_its_own_generated_draft(): void
     {
-        $category = \\App\\Models\\Category::create([
+        $category = \App\Models\Category::create([
             'name' => 'Technology',
             'slug' => 'independent-review-'.uniqid(),
             'type' => 'news',
             'status' => 'active',
         ]);
-        $user = \\App\\Models\\User::factory()->create();
+        $user = \App\Models\User::factory()->create();
         $news = News::create([
             'category_id' => $category->id,
             'title' => 'An article requiring independent editorial review',
@@ -116,14 +116,14 @@ class EditorialWorkflowAuditTest extends TestCase
             'source_material_hash' => hash('sha256', 'verified material'),
         ]);
 
-        $this->expectException(\\RuntimeException::class);
+        $this->expectException(\RuntimeException::class);
         $this->expectExceptionMessage('A different editor must approve an AI-generated article draft.');
         app(EditorialWorkflow::class)->approveArticle($news, (int) $user->id);
     }
 
     public function test_ai_image_generator_cannot_approve_its_own_generated_image(): void
     {
-        $user = \\App\\Models\\User::factory()->create();
+        $user = \App\Models\User::factory()->create();
         $imagePath = 'news-generated/1/editorial-test.jpg';
         $news = News::create([
             'title' => 'An article with an AI generated image',
@@ -148,7 +148,7 @@ class EditorialWorkflowAuditTest extends TestCase
             'status' => 'succeeded',
         ]);
 
-        $this->expectException(\\RuntimeException::class);
+        $this->expectException(\RuntimeException::class);
         $this->expectExceptionMessage('A different editor must approve an AI-generated image.');
         app(EditorialWorkflow::class)->approveImage($news, (int) $user->id);
     }
