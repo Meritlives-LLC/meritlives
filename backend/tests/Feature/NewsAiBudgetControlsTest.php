@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\News;
 use App\Models\NewsArticleGeneration;
 use App\Models\NewsImageGeneration;
+use App\Models\User;
 use App\Services\NewsArticleGenerator;
 use App\Services\NewsImageGenerator;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -86,10 +87,11 @@ class NewsAiBudgetControlsTest extends TestCase
             'openai_articles.monthly_budget_usd' => 3.00,
         ]);
         $news = $this->makeNews();
+        $user = User::factory()->create();
         Http::fake(['https://api.openai.com/*' => Http::response(['error' => 'test failure'], 503)]);
 
         try {
-            app(NewsArticleGenerator::class)->generate($news, str_repeat('Verified source notes provide context and factual details. ', 30), 1);
+            app(NewsArticleGenerator::class)->generate($news, str_repeat('Verified source notes provide context and factual details. ', 30), (int) $user->id);
             $this->fail('The generator should surface the failed provider request.');
         } catch (RuntimeException $exception) {
             $this->assertStringContainsString('HTTP 503', $exception->getMessage());
@@ -110,10 +112,11 @@ class NewsAiBudgetControlsTest extends TestCase
             'openai_images.monthly_budget_usd' => 5.00,
         ]);
         $news = $this->makeNews();
+        $user = User::factory()->create();
         Http::fake(['https://api.openai.com/*' => Http::response(['error' => 'test failure'], 503)]);
 
         try {
-            app(NewsImageGenerator::class)->generate($news, 'A conceptual technology illustration', 1);
+            app(NewsImageGenerator::class)->generate($news, 'A conceptual technology illustration', (int) $user->id);
             $this->fail('The image generator should surface the failed provider request.');
         } catch (RuntimeException $exception) {
             $this->assertStringContainsString('HTTP 503', $exception->getMessage());
