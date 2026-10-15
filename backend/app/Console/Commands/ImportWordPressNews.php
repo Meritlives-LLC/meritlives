@@ -150,7 +150,7 @@ class ImportWordPressNews extends Command
     private function rehostInlineImages(string $html, array &$failures): string
     {
         if (trim($html) === '' || ! str_contains($html, '<img')) return $html;
-        return preg_replace_callback('/<img[^>]+src=["\\']([^"\\']+)["\\']/i', function (array $matches) use (&$failures) {
+        return preg_replace_callback("/<img[^>]+src=[\"']([^\"']+)[\"']/i",  function (array $matches) use (&$failures) {
             $originalUrl = $matches[1];
             $local = $this->downloadImage($originalUrl);
             if (! $local) { $failures[] = $originalUrl; return $matches[0]; }
