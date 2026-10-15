@@ -135,8 +135,8 @@ class NewsImportSafetyTest extends TestCase
         config(['wordpress_import.image_allowed_hosts' => ['images.example.com']]);
         Http::fake();
 
-        $command = app(\\App\\Console\\Commands\\ImportWordPressNews::class);
-        $method = new \\ReflectionMethod($command, 'downloadImage');
+        $command = app(\App\Console\Commands\ImportWordPressNews::class);
+        $method = new \ReflectionMethod($command, 'downloadImage');
         $method->setAccessible(true);
 
         $this->assertNull($method->invoke($command, 'https://127.0.0.1/private.png'));
@@ -153,8 +153,8 @@ class NewsImportSafetyTest extends TestCase
             ]),
         ]);
 
-        $command = app(\\App\\Console\\Commands\\ImportWordPressNews::class);
-        $method = new \\ReflectionMethod($command, 'downloadImage');
+        $command = app(\App\Console\Commands\ImportWordPressNews::class);
+        $method = new \ReflectionMethod($command, 'downloadImage');
         $method->setAccessible(true);
 
         $this->assertNull($method->invoke($command, 'https://images.example.com/story.png'));
