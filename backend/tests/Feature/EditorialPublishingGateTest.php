@@ -85,4 +85,22 @@ class EditorialPublishingGateTest extends TestCase
         $this->assertSame('pending', $fresh->image_review_status);
         $this->assertNull($fresh->image_reviewed_at);
     }
+
+    public function test_published_article_cannot_be_saved_with_approval_metadata_removed(): void
+    {
+        $news = $this->makeNews([
+            'status' => 'published',
+            'editorial_status' => 'approved',
+            'article_reviewed_at' => now(),
+            'image_review_status' => 'approved',
+            'image_reviewed_at' => now(),
+        ]);
+        $news->article_reviewed_at = null;
+
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('Publishing blocked: article and image require separate editorial approvals.');
+        $news->save();
+    }
+
+
 }
