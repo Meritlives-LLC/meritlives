@@ -129,7 +129,7 @@ class SyncRssNews extends Command
         if (isset($item->enclosure) && (string) $item->enclosure->attributes()->url) {
             return (string) $item->enclosure->attributes()->url;
         }
-        if (preg_match('/<img[^>]+src=["\\']([^"\\']+)["\\']/i', (string) $item->description, $m)) {
+        if (preg_match("/<img[^>]+src=[\"']([^\"']+)[\"']/i", (string) $item->description, $m)) {
             return $m[1];
         }
         return null;
