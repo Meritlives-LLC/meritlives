@@ -3,7 +3,9 @@
 namespace App\Services;
 
 use App\Models\News;
+use App\Models\NewsArticleGeneration;
 use App\Models\NewsEditorialEvent;
+use App\Models\NewsImageGeneration;
 use Illuminate\Support\Facades\DB;
 use RuntimeException;
 
@@ -30,6 +32,15 @@ class EditorialWorkflow
 
     public function approveArticle(News $news, int $reviewerId, ?string $notes = null): void
     {
+        $generatorId = NewsArticleGeneration::query()
+            ->where('news_id', $news->id)
+            ->where('status', 'succeeded')
+            ->latest('id')
+            ->value('user_id');
+        if ($generatorId !== null && (int) $generatorId === $reviewerId) {
+            throw new RuntimeException('A different editor must approve an AI-generated article draft.');
+        }
+
         $result = $this->readiness->inspectArticle($news);
         if (! $result['ready']) {
             $failed = collect($result['checks'])->filter(fn (array $check) => ! $check['passed'])
@@ -50,6 +61,16 @@ class EditorialWorkflow
 
     public function approveImage(News $news, int $reviewerId, ?string $notes = null): void
     {
+        $generatedImage = NewsImageGeneration::query()
+            ->where('news_id', $news->id)
+            ->where('image_path', $news->featured_image)
+            ->where('status', 'succeeded')
+            ->latest('id')
+            ->first();
+        if ($generatedImage && (int) $generatedImage->user_id === $reviewerId) {
+            throw new RuntimeException('A different editor must approve an AI-generated image.');
+        }
+
         if (trim((string) ($news->featured_image ?? '')) === '' && trim((string) ($news->image_url ?? '')) === '') {
             throw new RuntimeException('An image must be attached before image approval.');
         }
