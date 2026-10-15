@@ -19,7 +19,10 @@ permissions:
 
 jobs:
   watch-base-baseline:
-    name: Watch tests on base branch
+    name: Watch tests on base branch (informational)
+    # The base branch currently has known Watch regressions. Keep this comparison
+    # visible without allowing pre-existing failures to fail the feature branch CI.
+    continue-on-error: true
     runs-on: ubuntu-latest
     defaults:
       run:
