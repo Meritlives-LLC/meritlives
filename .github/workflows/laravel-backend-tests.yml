@@ -18,6 +18,34 @@ permissions:
   contents: read
 
 jobs:
+  watch-base-baseline:
+    name: Watch tests on base branch
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - name: Checkout base branch
+        uses: actions/checkout@v4
+        with:
+          ref: feature/featured-stories-hero
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.4"
+          extensions: bcmath, ctype, curl, dom, fileinfo, intl, mbstring, pdo_sqlite, sqlite3, tokenizer, xml
+          coverage: none
+          tools: composer:v2
+      - name: Install dependencies
+        run: composer install --no-interaction --prefer-dist --no-progress
+      - name: Prepare test environment
+        run: |
+          cp .env.example .env
+          php artisan key:generate --force
+          mkdir -p storage/framework/cache storage/framework/sessions storage/framework/views bootstrap/cache
+      - name: Run Watch regression baseline
+        run: php artisan test tests/Feature/WatchApiTest.php tests/Feature/WatchCollectorTest.php
+
   editorial-tests:
     name: Editorial workflow tests
     runs-on: ubuntu-latest
