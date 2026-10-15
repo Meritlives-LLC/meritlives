@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\News;
 use App\Models\NewsArticleGeneration;
 use App\Models\NewsEditorialEvent;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
 use RuntimeException;
@@ -41,27 +42,31 @@ class NewsArticleGenerator
         $estimate = max(0.01, (float) config('openai_articles.estimated_cost_per_article_usd', 0.05));
         $dailyLimit = max(1, (int) config('openai_articles.daily_limit', 10));
         $monthlyBudget = max(0, (float) config('openai_articles.monthly_budget_usd', 3));
-        $countedStatuses = ['pending', 'succeeded', 'failed'];
-        $todayCount = NewsArticleGeneration::whereDate('created_at', today())->whereIn('status', $countedStatuses)->count();
-        $monthSpend = (float) NewsArticleGeneration::whereYear('created_at', now()->year)
-            ->whereMonth('created_at', now()->month)->whereIn('status', $countedStatuses)->sum('estimated_cost_usd');
+        // Reserve budget atomically before making the external request. The pending
+        // reservation counts toward both limits while the provider call is in flight.
+        $generation = Cache::lock('news-ai-article-budget:'.now()->format('Y-m'), 30)->block(5, function () use ($news, $userId, $wordCount, $estimate, $dailyLimit, $monthlyBudget, $sourceMaterial): NewsArticleGeneration {
+            $countedStatuses = ['pending', 'succeeded', 'failed'];
+            $todayCount = NewsArticleGeneration::whereDate('created_at', today())->whereIn('status', $countedStatuses)->count();
+            $monthSpend = (float) NewsArticleGeneration::whereYear('created_at', now()->year)
+                ->whereMonth('created_at', now()->month)->whereIn('status', $countedStatuses)->sum('estimated_cost_usd');
 
-        if ($todayCount >= $dailyLimit) {
-            throw new RuntimeException('The daily article-generation limit has been reached.');
-        }
-        if ($monthSpend + $estimate > $monthlyBudget) {
-            throw new RuntimeException('The configured monthly article-generation budget would be exceeded.');
-        }
+            if ($todayCount >= $dailyLimit) {
+                throw new RuntimeException('The daily article-generation limit has been reached.');
+            }
+            if ($monthSpend + $estimate > $monthlyBudget) {
+                throw new RuntimeException('The configured monthly article-generation budget would be exceeded.');
+            }
 
-        $generation = NewsArticleGeneration::create([
-            'news_id' => $news->id,
-            'user_id' => $userId,
-            'model' => (string) config('openai_articles.model', 'gpt-4.1-mini'),
-            'input_words' => $wordCount,
-            'estimated_cost_usd' => $estimate,
-            'status' => 'pending',
-            'source_material_hash' => hash('sha256', $sourceMaterial),
-        ]);
+            return NewsArticleGeneration::create([
+                'news_id' => $news->id,
+                'user_id' => $userId,
+                'model' => (string) config('openai_articles.model', 'gpt-4.1-mini'),
+                'input_words' => $wordCount,
+                'estimated_cost_usd' => $estimate,
+                'status' => 'pending',
+                'source_material_hash' => hash('sha256', $sourceMaterial),
+            ]);
+        });
 
         try {
             $response = Http::withToken($apiKey)->acceptJson()
