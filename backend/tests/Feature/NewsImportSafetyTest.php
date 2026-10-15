@@ -21,7 +21,7 @@ class NewsImportSafetyTest extends TestCase
         ]);
         Http::fake([
             'https://techcrunch.com/feed/' => Http::response($firstFeed, 200),
-            'https://techcrunch.com/category/artificial-intelligence/feed/' => Http::response($this->rss([]), 200),
+            'https://techcrunch.com/category/artificial-intelligence/feed/' => Http::response($this->rss([['guid' => 'https://example.com/story-1', 'title' => 'A new technology report', 'link' => 'https://example.com/story-1']]), 200),
         ]);
 
         $this->artisan('news:sync-rss')->assertExitCode(0);
