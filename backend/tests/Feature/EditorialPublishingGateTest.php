@@ -103,4 +103,20 @@ class EditorialPublishingGateTest extends TestCase
     }
 
 
+
+    public function test_database_trigger_blocks_query_builder_bypass_of_publishing_approval(): void
+    {
+        $news = $this->makeNews([
+            'status' => 'published',
+            'editorial_status' => 'approved',
+            'article_reviewed_at' => now(),
+            'image_review_status' => 'approved',
+            'image_reviewed_at' => now(),
+        ]);
+
+        $this->expectException(QueryException::class);
+        DB::table('news')->where('id', $news->id)->update(['article_reviewed_at' => null]);
+    }
+
+
 }
