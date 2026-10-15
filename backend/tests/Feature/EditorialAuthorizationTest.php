@@ -65,7 +65,7 @@ class EditorialAuthorizationTest extends TestCase
         Role::findOrCreate('editor', 'web');
 
         $user = User::factory()->create();
-        $this->assertFalse($user->canAccessPanel(app(\Filament\Panel::class)));
+        $this->assertFalse($user->canAccessPanel(\Mockery::mock(\Filament\Panel::class)));
 
         $user->assignRole('editor');
         $this->assertTrue($user->canAccessPanel(app(\Filament\Panel::class)));
