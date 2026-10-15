@@ -19,9 +19,9 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withCommands([
-        \\App\\Console\\Commands\\CollectWatchVideos::class,
-        \\App\\Console\\Commands\\SyncRssNews::class,
-        \\App\\Console\\Commands\\ImportWordPressNews::class,
+        \App\Console\Commands\CollectWatchVideos::class,
+        \App\Console\Commands\SyncRssNews::class,
+        \App\Console\Commands\ImportWordPressNews::class,
     ])
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias([
