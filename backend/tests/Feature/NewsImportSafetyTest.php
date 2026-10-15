@@ -129,6 +129,38 @@ class NewsImportSafetyTest extends TestCase
         $this->assertSame('A WordPress technology story', $news->fresh()->title);
     }
 
+
+    public function test_wordpress_image_import_rejects_untrusted_hosts_and_private_ip_literals(): void
+    {
+        config(['wordpress_import.image_allowed_hosts' => ['images.example.com']]);
+        Http::fake();
+
+        $command = app(\\App\\Console\\Commands\\ImportWordPressNews::class);
+        $method = new \\ReflectionMethod($command, 'downloadImage');
+        $method->setAccessible(true);
+
+        $this->assertNull($method->invoke($command, 'https://127.0.0.1/private.png'));
+        $this->assertNull($method->invoke($command, 'https://untrusted.example/image.png'));
+        Http::assertNothingSent();
+    }
+
+    public function test_wordpress_image_import_revalidates_redirect_targets(): void
+    {
+        config(['wordpress_import.image_allowed_hosts' => ['images.example.com']]);
+        Http::fake([
+            'https://images.example.com/*' => Http::response('', 302, [
+                'Location' => 'https://127.0.0.1/private-service',
+            ]),
+        ]);
+
+        $command = app(\\App\\Console\\Commands\\ImportWordPressNews::class);
+        $method = new \\ReflectionMethod($command, 'downloadImage');
+        $method->setAccessible(true);
+
+        $this->assertNull($method->invoke($command, 'https://images.example.com/story.png'));
+        Http::assertSentCount(1);
+    }
+
     /** @param array<int, array{guid:string,title:string,link:string}> $items */
     private function rss(array $items): string
     {
