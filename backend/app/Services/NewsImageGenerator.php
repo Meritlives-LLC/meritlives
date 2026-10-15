@@ -79,7 +79,7 @@ class NewsImageGenerator
             }
 
             $bytes = base64_decode($encoded, true);
-            if ($bytes === false || strlen($bytes) < 100) {
+            if ($bytes === false || strlen($bytes) < 100 || @getimagesizefromstring($bytes) === false) {
                 throw new RuntimeException('The generated image data was invalid.');
             }
 
