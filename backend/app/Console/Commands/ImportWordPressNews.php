@@ -132,19 +132,96 @@ class ImportWordPressNews extends Command
 
     private function downloadImage(?string $url): ?string
     {
-        if (! $url) return null;
-        $extension = pathinfo(parse_url($url, PHP_URL_PATH) ?? '', PATHINFO_EXTENSION) ?: 'jpg';
-        $filename = Str::slug(pathinfo(parse_url($url, PHP_URL_PATH) ?? '', PATHINFO_FILENAME)).'-'.substr(md5($url), 0, 10).'.'.$extension;
-        $path = self::IMAGE_DIR.'/'.$filename;
-        if (Storage::disk('public')->exists($path)) return Storage::disk('public')->url($path);
+        if (! $url || ! $this->isAllowedImageUrl($url)) return null;
+
+        $maxBytes = 5 * 1024 * 1024;
+        $currentUrl = $url;
+        $response = null;
+
         try {
-            $response = Http::timeout(30)->retry(2, 500)->get($url);
-            if (! $response->successful()) return null;
-            Storage::disk('public')->put($path, $response->body());
+            // Redirects are followed manually so every destination is validated.
+            for ($redirect = 0; $redirect <= 3; $redirect++) {
+                if (! $this->isAllowedImageUrl($currentUrl)) return null;
+
+                $response = Http::timeout(30)->withOptions([
+                    'allow_redirects' => false,
+                    'progress' => static function ($downloadTotal, $downloadedBytes) use ($maxBytes): void {
+                        if ($downloadedBytes > $maxBytes || ($downloadTotal > 0 && $downloadTotal > $maxBytes)) {
+                            throw new \RuntimeException('Image download exceeds the 5 MB limit.');
+                        }
+                    },
+                ])->get($currentUrl);
+
+                if (! in_array($response->status(), [301, 302, 303, 307, 308], true)) break;
+                $location = $response->header('Location');
+                if (! is_string($location) || trim($location) === '' || $redirect === 3) return null;
+                $currentUrl = $this->resolveRedirectUrl($currentUrl, $location);
+                if (! $currentUrl) return null;
+            }
+
+            if (! $response || ! $response->successful()) return null;
+            $bytes = $response->body();
+            if ($bytes === '' || strlen($bytes) > $maxBytes) return null;
+
+            $imageInfo = @getimagesizefromstring($bytes);
+            $mime = is_array($imageInfo) ? ($imageInfo['mime'] ?? '') : '';
+            $extensions = ['image/jpeg' => 'jpg', 'image/png' => 'png', 'image/webp' => 'webp'];
+            if (! isset($extensions[$mime])) return null;
+
+            $filename = Str::slug(pathinfo(parse_url($currentUrl, PHP_URL_PATH) ?? '', PATHINFO_FILENAME))
+                .'-'.substr(hash('sha256', $url), 0, 12).'.'.$extensions[$mime];
+            $path = self::IMAGE_DIR.'/'.$filename;
+            if (! Storage::disk('public')->exists($path)) {
+                Storage::disk('public')->put($path, $bytes);
+            }
             return Storage::disk('public')->url($path);
         } catch (\Throwable) {
             return null;
         }
+    }
+
+    private function isAllowedImageUrl(string $url): bool
+    {
+        if (filter_var($url, FILTER_VALIDATE_URL) === false) return false;
+        $parts = parse_url($url);
+        if (! is_array($parts)
+            || strtolower((string) ($parts['scheme'] ?? '')) !== 'https'
+            || empty($parts['host'])
+            || isset($parts['user'])
+            || isset($parts['pass'])) {
+            return false;
+        }
+
+        $host = strtolower(rtrim((string) $parts['host'], '.'));
+        if ($host === 'localhost' || str_ends_with($host, '.localhost')
+            || str_ends_with($host, '.local') || str_ends_with($host, '.internal')) {
+            return false;
+        }
+
+        if (filter_var($host, FILTER_VALIDATE_IP) !== false
+            && filter_var($host, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE) === false) {
+            return false;
+        }
+
+        $allowedHosts = config('wordpress_import.image_allowed_hosts', []);
+        $allowedHosts = array_map(static fn ($allowed): string => strtolower(trim((string) $allowed)), $allowedHosts);
+        return in_array($host, $allowedHosts, true);
+    }
+
+    private function resolveRedirectUrl(string $currentUrl, string $location): ?string
+    {
+        if (filter_var($location, FILTER_VALIDATE_URL) !== false) return $location;
+
+        $base = parse_url($currentUrl);
+        if (! is_array($base) || empty($base['host'])) return null;
+        if (str_starts_with($location, '//')) return 'https:'.$location;
+
+        $origin = 'https://'.$base['host'].(isset($base['port']) ? ':'.$base['port'] : '');
+        if (str_starts_with($location, '/')) return $origin.$location;
+
+        $path = (string) ($base['path'] ?? '/');
+        $directory = substr($path, 0, (int) strrpos($path, '/') + 1);
+        return $origin.$directory.$location;
     }
 
     private function rehostInlineImages(string $html, array &$failures): string
