@@ -129,6 +129,35 @@ class NewsAiBudgetControlsTest extends TestCase
         $this->assertNull($news->fresh()->image_reviewed_at);
     }
 
+
+    public function test_invalid_image_bytes_are_rejected_and_recorded_as_failed(): void
+    {
+        config([
+            'openai_images.api_key' => 'test-key',
+            'openai_images.monthly_budget_usd' => 5.00,
+        ]);
+        $news = $this->makeNews();
+        $user = User::factory()->create();
+        Http::fake([
+            'https://api.openai.com/*' => Http::response([
+                'data' => [['b64_json' => base64_encode(str_repeat('not-an-image', 30))]],
+            ], 200),
+        ]);
+
+        try {
+            app(NewsImageGenerator::class)->generate($news, 'A conceptual technology illustration', (int) $user->id);
+            $this->fail('Invalid image bytes must be rejected.');
+        } catch (RuntimeException $exception) {
+            $this->assertStringContainsString('image data was invalid', $exception->getMessage());
+        }
+
+        $generation = NewsImageGeneration::latest('id')->firstOrFail();
+        $this->assertSame('failed', $generation->status);
+        $this->assertNull($generation->image_path);
+        $this->assertSame('pending', $news->fresh()->image_review_status);
+    }
+
+
     private function makeNews(): News
     {
         return News::create([
