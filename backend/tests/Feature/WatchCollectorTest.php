@@ -116,7 +116,7 @@ class WatchCollectorTest extends TestCase
         ]);
     }
 
-    private function responseFor(Request $request): \Illuminate\Http\Client\Response
+    private function responseFor(Request $request)
     {
         $path = parse_url($request->url(), PHP_URL_PATH);
         return match (basename((string) $path)) {
