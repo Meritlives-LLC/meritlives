@@ -64,9 +64,9 @@ class EditorialAuthorizationTest extends TestCase
 
         $this->assertSame($creator->id, $news->created_by);
 
-        $this->expectException(\\RuntimeException::class);
+        $this->expectException(\RuntimeException::class);
         $this->expectExceptionMessage('A different editor must approve a manually authored article.');
-        app(\\App\\Services\\EditorialWorkflow::class)->approveArticle($news, (int) $creator->id);
+        app(\App\Services\EditorialWorkflow::class)->approveArticle($news, (int) $creator->id);
     }
 
     public function test_image_studio_requires_media_or_news_edit_permission(): void
