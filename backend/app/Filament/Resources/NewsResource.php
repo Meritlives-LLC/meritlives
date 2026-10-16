@@ -90,6 +90,7 @@ class NewsResource extends Resource
             Tables\Columns\TextColumn::make('title')->searchable()->limit(50),
             Tables\Columns\TextColumn::make('source_name')->searchable(),
             Tables\Columns\TextColumn::make('author_name')->label('Author')->searchable(),
+            Tables\Columns\TextColumn::make('creator.name')->label('Created by')->placeholder('Imported / system')->toggleable(),
             Tables\Columns\TextColumn::make('category.name')->sortable(),
             Tables\Columns\TextColumn::make('status')->badge(),
             Tables\Columns\TextColumn::make('editorial_status')->label('Article review')->badge(),
