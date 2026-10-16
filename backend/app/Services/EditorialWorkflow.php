@@ -32,6 +32,10 @@ class EditorialWorkflow
 
     public function approveArticle(News $news, int $reviewerId, ?string $notes = null): void
     {
+        if ($news->created_by !== null && (int) $news->created_by === $reviewerId) {
+            throw new RuntimeException('A different editor must approve a manually authored article.');
+        }
+
         $generatorId = NewsArticleGeneration::query()
             ->where('news_id', $news->id)
             ->where('status', 'succeeded')
