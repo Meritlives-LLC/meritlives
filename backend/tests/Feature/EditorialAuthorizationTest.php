@@ -47,6 +47,28 @@ class EditorialAuthorizationTest extends TestCase
         $this->assertFalse(NewsResource::canDelete($news));
     }
 
+
+    public function test_manual_article_creator_cannot_approve_their_own_article(): void
+    {
+        $creator = User::factory()->create();
+        $this->actingAs($creator);
+
+        $news = News::create([
+            'title' => 'Manual article created for review',
+            'slug' => 'manual-article-created-for-review',
+            'source_name' => 'Test Source',
+            'source_url' => 'https://example.com/manual-article',
+            'status' => 'pending',
+            'editorial_status' => 'draft',
+        ]);
+
+        $this->assertSame($creator->id, $news->created_by);
+
+        $this->expectException(\\RuntimeException::class);
+        $this->expectExceptionMessage('A different editor must approve a manually authored article.');
+        app(\\App\\Services\\EditorialWorkflow::class)->approveArticle($news, (int) $creator->id);
+    }
+
     public function test_image_studio_requires_media_or_news_edit_permission(): void
     {
         Permission::findOrCreate('manage_media', 'web');
