@@ -10,7 +10,7 @@ use RuntimeException;
 class News extends Model
 {
     protected $fillable = [
-        'category_id', 'title', 'slug', 'excerpt', 'content', 'author_name',
+        'category_id', 'title', 'slug', 'excerpt', 'content', 'author_name', 'created_by',
         'source_name', 'source_url', 'image_url', 'featured_image', 'published_at',
         'external_id', 'status', 'featured', 'editorial_status', 'article_reviewed_by',
         'article_reviewed_at', 'article_review_notes', 'image_review_status',
@@ -26,6 +26,13 @@ class News extends Model
 
     protected static function booted(): void
     {
+        static::creating(function (News $news): void {
+            // Capture the authenticated CMS creator; CLI imports remain nullable.
+            if ($news->created_by === null && auth()->check()) {
+                $news->created_by = (int) auth()->id();
+            }
+        });
+
         static::saving(function (News $news): void {
             if ($news->status === 'published') {
                 if ($news->editorial_status !== 'approved'
@@ -85,6 +92,11 @@ class News extends Model
     public function editorialEvents(): HasMany
     {
         return $this->hasMany(NewsEditorialEvent::class)->latest();
+    }
+
+    public function creator(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'created_by');
     }
 
     public function articleReviewer(): BelongsTo
