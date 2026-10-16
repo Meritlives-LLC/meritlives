@@ -116,6 +116,16 @@ class EditorialPublishingGateTest extends TestCase
             'image_reviewed_at' => now(),
         ]);
 
+        $this->assertSame('published', DB::table('news')->where('id', $news->id)->value('status'));
+        $this->assertSame('sqlite', DB::getDriverName());
+
+        $trigger = DB::table('sqlite_master')
+            ->where('type', 'trigger')
+            ->where('name', 'news_published_approval_update')
+            ->exists();
+
+        $this->assertTrue($trigger, 'The SQLite publishing-approval trigger must be installed.');
+
         $this->expectException(QueryException::class);
         DB::table('news')->where('id', $news->id)->update(['article_reviewed_at' => null]);
     }
