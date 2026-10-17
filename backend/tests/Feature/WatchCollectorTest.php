@@ -49,7 +49,7 @@ class WatchCollectorTest extends TestCase
     {
         $this->source('UCsBjURrPoezykLs9EqgamOA', 'Fireship');
         Http::fake(function (Request $request) {
-            if (parse_url($request->url(), PHP_URL_PATH) === '/youtube/v3/videos') {
+            if ($this->path($request) === '/youtube/v3/videos') {
                 return Http::response(['items' => [[
                     'id' => 'dQw4w9WgXcQ',
                     'snippet' => [
@@ -62,11 +62,13 @@ class WatchCollectorTest extends TestCase
                     'status' => ['privacyStatus' => 'public', 'embeddable' => true],
                 ]]]);
             }
+
             return $this->responseFor($request);
         });
 
         $result = app(\App\Services\YouTube\WatchCollector::class)->collect();
 
+        Http::assertSent(fn (Request $request) => $this->path($request) === '/youtube/v3/videos');
         $this->assertSame(1, $result['totals']['found']);
         $this->assertSame(1, $result['totals']['skipped']);
         $this->assertDatabaseCount('watch_videos', 0);
@@ -77,15 +79,19 @@ class WatchCollectorTest extends TestCase
         $this->source('UCaaaaaaaaaaaaaaaaaaaaaa', 'Broken source');
         $this->source('UCbbbbbbbbbbbbbbbbbbbbbb', 'Healthy source');
         Http::fake(function (Request $request) {
-            if (parse_url($request->url(), PHP_URL_PATH) === '/youtube/v3/channels' && $request->data()['id'] === 'UCaaaaaaaaaaaaaaaaaaaaaa') {
+            if ($this->path($request) === '/youtube/v3/channels'
+                && $this->queryParameter($request, 'id') === 'UCaaaaaaaaaaaaaaaaaaaaaa') {
                 return Http::response(['error' => 'failure'], 500);
             }
+
             return $this->responseFor($request);
         });
 
         $result = app(\App\Services\YouTube\WatchCollector::class)->collect();
 
         $this->assertSame(1, $result['totals']['failed']);
+        $this->assertSame(1, $result['totals']['failed_sources']);
+        $this->assertSame(1, $result['totals']['successful_sources']);
         $this->assertSame(1, $result['totals']['new']);
         $this->assertDatabaseCount('watch_videos', 1);
     }
@@ -111,10 +117,22 @@ class WatchCollectorTest extends TestCase
         ]);
     }
 
+    private function path(Request $request): ?string
+    {
+        return parse_url($request->url(), PHP_URL_PATH);
+    }
+
+    private function queryParameter(Request $request, string $name): ?string
+    {
+        $query = [];
+        parse_str((string) parse_url($request->url(), PHP_URL_QUERY), $query);
+
+        return isset($query[$name]) ? (string) $query[$name] : null;
+    }
+
     private function responseFor(Request $request): \Illuminate\Http\Client\Response
     {
-        $path = parse_url($request->url(), PHP_URL_PATH);
-        return match (basename((string) $path)) {
+        return match (basename((string) $this->path($request))) {
             'channels' => Http::response(['items' => [['contentDetails' => ['relatedPlaylists' => ['uploads' => 'UU-upload']]]]]),
             'playlistItems' => Http::response(['items' => [['contentDetails' => ['videoId' => 'dQw4w9WgXcQ']]]]),
             'videos' => Http::response(['items' => [[
