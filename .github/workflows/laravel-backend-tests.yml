@@ -1,0 +1,105 @@
+name: Laravel backend tests
+
+on:
+  pull_request:
+    branches:
+      - feature/featured-stories-hero
+    paths:
+      - "backend/**"
+      - ".github/workflows/laravel-backend-tests.yml"
+  push:
+    branches:
+      - feature/editorial-ai-studio
+    paths:
+      - "backend/**"
+      - ".github/workflows/laravel-backend-tests.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  watch-base-baseline:
+    name: Watch tests on base branch (informational)
+    # The base branch currently has known Watch regressions. Keep this comparison
+    # visible without allowing pre-existing failures to fail the feature branch CI.
+    continue-on-error: true
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - name: Checkout base branch
+        uses: actions/checkout@v4
+        with:
+          ref: feature/featured-stories-hero
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.4"
+          extensions: bcmath, ctype, curl, dom, fileinfo, intl, mbstring, pdo_sqlite, sqlite3, tokenizer, xml
+          coverage: none
+          tools: composer:v2
+      - name: Install dependencies
+        run: composer install --no-interaction --prefer-dist --no-progress
+      - name: Prepare test environment
+        run: |
+          cp .env.example .env
+          php artisan key:generate --force
+          mkdir -p storage/framework/cache storage/framework/sessions storage/framework/views bootstrap/cache
+      - name: Run Watch regression baseline
+        run: php artisan test tests/Feature/WatchApiTest.php tests/Feature/WatchCollectorTest.php
+
+  editorial-tests:
+    name: Editorial workflow tests
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.4"
+          extensions: bcmath, ctype, curl, dom, fileinfo, intl, mbstring, pdo_sqlite, sqlite3, tokenizer, xml
+          coverage: none
+          tools: composer:v2
+      - name: Install dependencies
+        run: composer install --no-interaction --prefer-dist --no-progress
+      - name: Prepare test environment
+        run: |
+          cp .env.example .env
+          php artisan key:generate --force
+          mkdir -p storage/framework/cache storage/framework/sessions storage/framework/views bootstrap/cache
+      - name: Run editorial readiness and publishing gate tests
+        run: php artisan test --filter='EditorialReadinessTest|EditorialAuthorizationTest|EditorialPublishingGateTest|EditorialWorkflowAuditTest|NewsArticleGeneratorSafetyTest|NewsAiBudgetControlsTest|NewsHeadlineDeduplicatorTest|NewsImportSafetyTest|PublicNewsEditorialVisibilityTest'
+
+  full-suite:
+    name: Full backend test suite
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          # The committed lockfile currently resolves Symfony 8.1, which requires PHP 8.4.1+.
+          php-version: "8.4"
+          extensions: bcmath, ctype, curl, dom, fileinfo, intl, mbstring, pdo_sqlite, sqlite3, tokenizer, xml
+          coverage: none
+          tools: composer:v2
+      - name: Validate Composer configuration
+        run: composer validate --no-check-publish
+      - name: Install dependencies
+        run: composer install --no-interaction --prefer-dist --no-progress
+      - name: Prepare test environment
+        run: |
+          cp .env.example .env
+          php artisan key:generate --force
+          mkdir -p storage/framework/cache storage/framework/sessions storage/framework/views bootstrap/cache
+      - name: Run full test suite
+        run: php artisan test

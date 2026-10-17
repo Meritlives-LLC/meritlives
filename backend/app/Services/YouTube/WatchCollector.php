@@ -22,7 +22,7 @@ class WatchCollector
 
     public function __construct(private readonly YouTubeDataApi $api) {}
 
-    /** @return array{sources: array<int, array<string, int|string>>, totals: array<string, int>} */
+    /** @return array{sources: array<int, array<string, int|string|null>>, totals: array<string, int>} */
     public function collect(): array
     {
         $sources = [];
@@ -32,7 +32,7 @@ class WatchCollector
 
         WatchSource::query()->where('is_active', true)->where('platform', WatchSource::PLATFORM_YOUTUBE)
             ->orderBy('priority')->orderBy('id')->each(function (WatchSource $source) use (&$sources, &$totals, $limit, $cutoff): void {
-                $stats = ['name' => $source->name, 'found' => 0, 'new' => 0, 'updated' => 0, 'skipped' => 0, 'failed' => 0];
+                $stats = ['name' => $source->name, 'found' => 0, 'new' => 0, 'updated' => 0, 'skipped' => 0, 'failed' => 0, 'error' => null];
                 try {
                     foreach ($this->api->recentUploads($source, $limit) as $candidate) {
                         $stats['found']++;
@@ -41,10 +41,12 @@ class WatchCollector
                     }
                 } catch (Throwable $exception) {
                     $stats['failed']++;
+                    $stats['error'] = $exception->getMessage();
                     Log::warning('Watch source collection failed.', [
                         'source_id' => $source->id,
                         'source_name' => $source->name,
                         'error_type' => $exception::class,
+                        'error' => $exception->getMessage(),
                     ]);
                 }
 

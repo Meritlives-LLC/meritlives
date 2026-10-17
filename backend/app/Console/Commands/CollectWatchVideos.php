@@ -24,6 +24,9 @@ class CollectWatchVideos extends Command
             $this->newLine();
             $this->line('Source: '.$source['name']);
             $this->line("Found: {$source['found']} | New: {$source['new']} | Updated: {$source['updated']} | Skipped: {$source['skipped']} | Failed: {$source['failed']}");
+            if (($source['error'] ?? null) !== null) {
+                $this->warn('Collection error: '.$source['error']);
+            }
         }
 
         $totals = $result['totals'];
