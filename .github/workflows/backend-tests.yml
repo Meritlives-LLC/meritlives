@@ -21,6 +21,9 @@ permissions:
 jobs:
   backend-tests:
     runs-on: ubuntu-latest
+    env:
+      APP_ENV: testing
+      APP_KEY: base64:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=
     defaults:
       run:
         working-directory: backend

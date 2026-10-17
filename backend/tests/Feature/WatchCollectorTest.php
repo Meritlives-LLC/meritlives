@@ -7,6 +7,7 @@ use App\Models\WatchVideo;
 use Illuminate\Http\Client\Request;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
+use Psr\Http\Message\UriInterface;
 use Tests\TestCase;
 
 class WatchCollectorTest extends TestCase
@@ -117,22 +118,22 @@ class WatchCollectorTest extends TestCase
         ]);
     }
 
-    private function path(Request $request): ?string
+    private function path(Request $request): string
     {
-        return parse_url($request->url(), PHP_URL_PATH);
+        return $request->toPsrRequest()->getUri()->getPath();
     }
 
     private function queryParameter(Request $request, string $name): ?string
     {
         $query = [];
-        parse_str((string) parse_url($request->url(), PHP_URL_QUERY), $query);
+        parse_str($request->toPsrRequest()->getUri()->getQuery(), $query);
 
         return isset($query[$name]) ? (string) $query[$name] : null;
     }
 
     private function responseFor(Request $request): \Illuminate\Http\Client\Response
     {
-        return match (basename((string) $this->path($request))) {
+        return match (basename($this->path($request))) {
             'channels' => Http::response(['items' => [['contentDetails' => ['relatedPlaylists' => ['uploads' => 'UU-upload']]]]]),
             'playlistItems' => Http::response(['items' => [['contentDetails' => ['videoId' => 'dQw4w9WgXcQ']]]]),
             'videos' => Http::response(['items' => [[
