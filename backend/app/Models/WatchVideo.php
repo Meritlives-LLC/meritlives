@@ -51,10 +51,19 @@ class WatchVideo extends Model
             ->whereRaw('LENGTH(youtube_video_id) = 11')
             ->whereNotNull('thumbnail_url')
             ->where('thumbnail_url', 'like', 'https://%')
-            ->where(function (Builder $query) {
-                $query->where('video_url', 'like', 'https://youtube.com/watch?v=%')
-                    ->orWhere('video_url', 'like', 'https://www.youtube.com/watch?v=%')
-                    ->orWhere('video_url', 'like', 'https://youtu.be/%');
+            ->where(function (Builder $query): void {
+                foreach ([
+                    'https://youtube.com/watch?v=',
+                    'https://www.youtube.com/watch?v=',
+                    'https://youtu.be/',
+                ] as $prefix) {
+                    $query->orWhere(function (Builder $urlQuery) use ($prefix): void {
+                        $urlQuery
+                            ->where('video_url', 'like', $prefix.'%')
+                            ->whereRaw('SUBSTR(video_url, LENGTH(?) + 1, 11) = youtube_video_id', [$prefix])
+                            ->whereRaw("SUBSTR(video_url, LENGTH(?) + 12, 1) IN ('', '&', '#')", [$prefix]);
+                    });
+                }
             });
     }
 }
