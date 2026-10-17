@@ -4,6 +4,8 @@ namespace App\Http\Resources;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class BlogPostResource extends JsonResource
 {
@@ -15,7 +17,11 @@ class BlogPostResource extends JsonResource
             'slug' => $this->slug,
             'excerpt' => $this->excerpt,
             'content' => $this->content,
-            'featured_image' => $this->featured_image,
+            'featured_image' => $this->featured_image
+                ? (Str::startsWith($this->featured_image, ['http://', 'https://'])
+                    ? $this->featured_image
+                    : Storage::disk('public')->url($this->featured_image))
+                : null,
             'author' => $this->whenLoaded('author', fn () => [
                 'id' => $this->author?->id,
                 'name' => $this->author?->name,

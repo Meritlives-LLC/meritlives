@@ -4,6 +4,7 @@ on:
   pull_request:
     branches:
       - feature/featured-stories-hero
+      - feature/editorial-ai-studio
     paths:
       - "backend/**"
       - ".github/workflows/laravel-backend-tests.yml"

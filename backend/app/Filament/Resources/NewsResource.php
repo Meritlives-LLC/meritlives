@@ -70,7 +70,7 @@ class NewsResource extends Resource
             Forms\Components\TextInput::make('source_name')->required(),
             Forms\Components\TextInput::make('source_url')->url()->required(),
             Forms\Components\FileUpload::make('featured_image')->label('Featured Image')->image()->maxSize(5120)
-                ->disk('public')->visibility('public')->directory('news'),
+                ->disk('public')->visibility('public')->directory('news-images'),
             Forms\Components\TextInput::make('image_url')->url(),
             Forms\Components\DateTimePicker::make('published_at'),
             Forms\Components\TextInput::make('external_id')->disabled()->dehydrated(),

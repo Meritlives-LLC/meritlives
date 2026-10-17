@@ -6,6 +6,11 @@ const apiOrigin = process.env.NEXT_PUBLIC_API_URL
 
 const nextConfig = {
   reactStrictMode: true,
+  experimental: {
+    cpus: 1,
+    workerThreads: false,
+    webpackBuildWorker: false,
+  },
   images: {
     remotePatterns: [
       { protocol: "http", hostname: "127.0.0.1" },
