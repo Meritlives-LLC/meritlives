@@ -38,6 +38,9 @@ jobs:
           extensions: mbstring, pdo_mysql, pdo_sqlite, sqlite3, intl
           coverage: none
 
+      - name: Prepare test environment
+        run: cp .env.example .env
+
       - name: Validate Composer configuration
         run: composer validate --no-check-publish
 
