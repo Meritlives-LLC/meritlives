@@ -7,7 +7,6 @@ use App\Models\WatchVideo;
 use Illuminate\Http\Client\Request;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
-use Psr\Http\Message\UriInterface;
 use Tests\TestCase;
 
 class WatchCollectorTest extends TestCase
@@ -24,7 +23,7 @@ class WatchCollectorTest extends TestCase
     public function test_command_collects_and_deduplicates_repeated_runs(): void
     {
         $this->source('UCsBjURrPoezykLs9EqgamOA', 'Fireship');
-        Http::fake(fn (Request $request) => $this->responseFor($request));
+        $this->fakeYouTubeResponses();
 
         $this->artisan('watch:collect')->assertExitCode(0);
         $this->artisan('watch:collect')->assertExitCode(0);
@@ -49,27 +48,24 @@ class WatchCollectorTest extends TestCase
     public function test_explicit_short_metadata_is_filtered(): void
     {
         $this->source('UCsBjURrPoezykLs9EqgamOA', 'Fireship');
-        Http::fake(function (Request $request) {
-            if ($this->path($request) === '/youtube/v3/videos') {
-                return Http::response(['items' => [[
-                    'id' => 'dQw4w9WgXcQ',
-                    'snippet' => [
-                        'title' => 'A software tip #Shorts',
-                        'description' => 'Programming trick',
-                        'publishedAt' => now()->toIso8601String(),
-                        'thumbnails' => ['high' => ['url' => 'https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg']],
-                    ],
-                    'contentDetails' => ['duration' => 'PT1M'],
-                    'status' => ['privacyStatus' => 'public', 'embeddable' => true],
-                ]]]);
-            }
-
-            return $this->responseFor($request);
-        });
+        $shortVideo = [
+            'items' => [[
+                'id' => 'dQw4w9WgXcQ',
+                'snippet' => [
+                    'title' => 'A software tip #Shorts',
+                    'description' => 'Programming trick',
+                    'publishedAt' => now()->toIso8601String(),
+                    'thumbnails' => ['high' => ['url' => 'https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg']],
+                ],
+                'contentDetails' => ['duration' => 'PT1M'],
+                'status' => ['privacyStatus' => 'public', 'embeddable' => true],
+            ]],
+        ];
+        $this->fakeYouTubeResponses($shortVideo);
 
         $result = app(\App\Services\YouTube\WatchCollector::class)->collect();
 
-        Http::assertSent(fn (Request $request) => $this->path($request) === '/youtube/v3/videos');
+        Http::assertSent(fn (Request $request) => str_contains($request->url(), '/youtube/v3/videos'));
         $this->assertSame(1, $result['totals']['found']);
         $this->assertSame(1, $result['totals']['skipped']);
         $this->assertDatabaseCount('watch_videos', 0);
@@ -79,14 +75,7 @@ class WatchCollectorTest extends TestCase
     {
         $this->source('UCaaaaaaaaaaaaaaaaaaaaaa', 'Broken source');
         $this->source('UCbbbbbbbbbbbbbbbbbbbbbb', 'Healthy source');
-        Http::fake(function (Request $request) {
-            if ($this->path($request) === '/youtube/v3/channels'
-                && $this->queryParameter($request, 'id') === 'UCaaaaaaaaaaaaaaaaaaaaaa') {
-                return Http::response(['error' => 'failure'], 500);
-            }
-
-            return $this->responseFor($request);
-        });
+        $this->fakeYouTubeResponses(null, 'UCaaaaaaaaaaaaaaaaaaaaaa');
 
         $result = app(\App\Services\YouTube\WatchCollector::class)->collect();
 
@@ -118,36 +107,44 @@ class WatchCollectorTest extends TestCase
         ]);
     }
 
-    private function path(Request $request): string
+    /**
+     * Register explicit URL-pattern fakes so GET query parameters do not affect
+     * endpoint matching. The optional failed channel is selected from the URL
+     * query string, not Request::data(), which only exposes the request body.
+     *
+     * @param array<string, mixed>|null $videoPayload
+     */
+    private function fakeYouTubeResponses(?array $videoPayload = null, ?string $failedChannelId = null): void
     {
-        return $request->toPsrRequest()->getUri()->getPath();
-    }
+        Http::fake([
+            'https://www.googleapis.com/youtube/v3/channels*' => function (Request $request) use ($failedChannelId) {
+                $query = [];
+                parse_str((string) parse_url($request->url(), PHP_URL_QUERY), $query);
 
-    private function queryParameter(Request $request, string $name): ?string
-    {
-        $query = [];
-        parse_str($request->toPsrRequest()->getUri()->getQuery(), $query);
+                if ($failedChannelId !== null && ($query['id'] ?? null) === $failedChannelId) {
+                    return Http::response(['error' => 'failure'], 500);
+                }
 
-        return isset($query[$name]) ? (string) $query[$name] : null;
-    }
-
-    private function responseFor(Request $request): \Illuminate\Http\Client\Response
-    {
-        return match (basename($this->path($request))) {
-            'channels' => Http::response(['items' => [['contentDetails' => ['relatedPlaylists' => ['uploads' => 'UU-upload']]]]]),
-            'playlistItems' => Http::response(['items' => [['contentDetails' => ['videoId' => 'dQw4w9WgXcQ']]]]),
-            'videos' => Http::response(['items' => [[
-                'id' => 'dQw4w9WgXcQ',
-                'snippet' => [
-                    'title' => 'New software technology update',
-                    'description' => str_repeat('A useful developer technology discussion. ', 5),
-                    'publishedAt' => now()->toIso8601String(),
-                    'thumbnails' => ['high' => ['url' => 'https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg']],
-                ],
-                'contentDetails' => ['duration' => 'PT5M'],
-                'status' => ['privacyStatus' => 'public', 'embeddable' => true],
-            ]]]),
-            default => Http::response([], 404),
-        };
+                return Http::response(['items' => [[
+                    'contentDetails' => ['relatedPlaylists' => ['uploads' => 'UU-upload']],
+                ]]]);
+            },
+            'https://www.googleapis.com/youtube/v3/playlistItems*' => Http::response([
+                'items' => [['contentDetails' => ['videoId' => 'dQw4w9WgXcQ']]],
+            ]),
+            'https://www.googleapis.com/youtube/v3/videos*' => Http::response($videoPayload ?? [
+                'items' => [[
+                    'id' => 'dQw4w9WgXcQ',
+                    'snippet' => [
+                        'title' => 'New software technology update',
+                        'description' => str_repeat('A useful developer technology discussion. ', 5),
+                        'publishedAt' => now()->toIso8601String(),
+                        'thumbnails' => ['high' => ['url' => 'https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg']],
+                    ],
+                    'contentDetails' => ['duration' => 'PT5M'],
+                    'status' => ['privacyStatus' => 'public', 'embeddable' => true],
+                ]],
+            ]),
+        ]);
     }
 }
