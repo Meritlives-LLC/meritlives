@@ -14,9 +14,12 @@ class RolesAndPermissionsSeeder extends Seeder
             'view_products', 'create_products', 'edit_products', 'delete_products',
             'view_services', 'create_services', 'edit_services', 'delete_services',
             'view_news', 'create_news', 'edit_news', 'delete_news',
-            'view_blog', 'create_blog', 'edit_blog', 'delete_blog',
+            'view_blog', 'create_blog', 'edit_blog', 'delete_blog', 'review_blog',
             'manage_media', 'manage_settings', 'manage_users',
             'manage_messages', 'manage_subscribers',
+            'view_ai_studio', 'create_ai_generations', 'review_ai_generations', 'manage_ai_prompts',
+            'view_news_discoveries', 'manage_news_sources', 'refresh_news_sources',
+            'rewrite_news_discoveries', 'review_news_discoveries',
         ];
 
         foreach ($permissions as $permission) {
@@ -30,8 +33,10 @@ class RolesAndPermissionsSeeder extends Seeder
                 'view_products','edit_products',
                 'view_services','edit_services',
                 'view_news','create_news','edit_news',
-                'view_blog','create_blog','edit_blog',
+                'view_blog','create_blog','edit_blog','review_blog',
                 'manage_media','manage_messages','manage_subscribers',
+                'view_ai_studio','create_ai_generations','review_ai_generations',
+                'view_news_discoveries','refresh_news_sources','rewrite_news_discoveries','review_news_discoveries',
             ],
             'author' => [
                 'view_blog','create_blog','edit_blog','manage_media',

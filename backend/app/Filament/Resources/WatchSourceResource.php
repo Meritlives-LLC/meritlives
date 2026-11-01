@@ -3,6 +3,7 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\WatchSourceResource\Pages;
+use App\Filament\Resources\Concerns\UsesResourcePermissions;
 use App\Models\WatchSource;
 use Filament\Forms;
 use Filament\Forms\Form;
@@ -12,6 +13,8 @@ use Filament\Tables\Table;
 
 class WatchSourceResource extends Resource
 {
+    use UsesResourcePermissions;
+
     protected static ?string $model = WatchSource::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-video-camera';

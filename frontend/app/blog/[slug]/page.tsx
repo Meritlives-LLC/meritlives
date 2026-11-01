@@ -1,11 +1,13 @@
+import EditorialNewsletterSection from "../../../components/EditorialNewsletterSection";
 import { notFound } from "next/navigation";
 import { getBlogPost } from "../../../lib/queries";
 
 export default async function BlogDetailPage({
-  params,
+  params: paramsPromise,
 }: {
-  params: { slug: string };
+  params: Promise<{ slug: string }>;
 }) {
+  const params = await paramsPromise;
   try {
     const result = await getBlogPost(params.slug);
     const post = result.data;
@@ -18,11 +20,11 @@ export default async function BlogDetailPage({
           <p className="mt-4 text-sm opacity-60">By {post.author.name}</p>
         )}
         {post.featured_image && (
-          <img
+          <figure className="mt-10"><img
             src={post.featured_image}
-            alt=""
+            alt={post.featured_image_alt || post.title}
             className="mt-10 aspect-video w-full rounded-2xl object-cover"
-          />
+          />{post.featured_image_disclosure && <figcaption className="mt-2 text-sm text-[#596273]">{post.featured_image_disclosure}</figcaption>}</figure>
         )}
         {post.content && (
           <article
@@ -30,6 +32,7 @@ export default async function BlogDetailPage({
             dangerouslySetInnerHTML={{ __html: post.content }}
           />
         )}
+      <EditorialNewsletterSection />
       </main>
     );
   } catch {

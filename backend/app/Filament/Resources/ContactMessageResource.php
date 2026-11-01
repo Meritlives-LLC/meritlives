@@ -3,6 +3,7 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\ContactMessageResource\Pages;
+use App\Filament\Resources\Concerns\UsesResourcePermissions;
 use App\Models\ContactMessage;
 use Filament\Forms;
 use Filament\Forms\Form;
@@ -12,6 +13,13 @@ use Filament\Tables\Table;
 
 class ContactMessageResource extends Resource
 {
+    use UsesResourcePermissions;
+
+    protected static function permissions(): array
+    {
+        return ['view' => 'manage_messages', 'edit' => 'manage_messages', 'delete' => 'manage_messages'];
+    }
+
     protected static ?string $model = ContactMessage::class;
     protected static ?string $navigationIcon = 'heroicon-o-chat-bubble-left-right';
     protected static ?string $navigationGroup = 'Engagement';

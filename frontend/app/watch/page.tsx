@@ -9,10 +9,11 @@ export const metadata: Metadata = {
 };
 
 interface WatchPageProps {
-  searchParams: { page?: string };
+  searchParams: Promise<{ page?: string }>;
 }
 
-export default async function WatchPage({ searchParams }: WatchPageProps) {
+export default async function WatchPage({ searchParams: searchParamsPromise }: WatchPageProps) {
+  const searchParams = await searchParamsPromise;
   const parsedPage = Number(searchParams.page ?? "1");
   const page = Number.isInteger(parsedPage) && parsedPage > 0 ? parsedPage : 1;
   let result;

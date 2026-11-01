@@ -19,6 +19,8 @@ class SearchController extends Controller
         ]);
 
         $results = $searchService->search($validated['q']);
+        \App\Support\EditorialImageMetadata::attach($results['news']);
+        \App\Support\EditorialImageMetadata::attach($results['blog']);
 
         return response()->json([
             'data' => [
@@ -30,6 +32,6 @@ class SearchController extends Controller
             'meta' => [
                 'query' => $validated['q'],
             ],
-        ]);
+        ])->header('Cache-Control', 'private, no-store, max-age=0');
     }
 }

@@ -17,8 +17,8 @@ class SecurityHeaders
         $response->headers->set('Referrer-Policy', 'strict-origin-when-cross-origin');
         $response->headers->set('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
 
-        if ($request->isSecure()) {
-            $response->headers->set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+        if (app()->environment('production') && config('security.hsts_enabled') && $request->isSecure()) {
+            $response->headers->set('Strict-Transport-Security', 'max-age='.(int) config('security.hsts_max_age', 31536000));
         }
 
         return $response;

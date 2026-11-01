@@ -113,7 +113,8 @@ class WatchCollector
             'duration' => (string) $candidate['duration'],
             'relevance_score' => $relevance,
             'quality_score' => $quality,
-            'status' => $existing?->status ?? WatchVideo::STATUS_ACTIVE,
+            // Collected videos stay hidden until an editor approves them in Filament.
+            'status' => $existing?->status ?? WatchVideo::STATUS_INACTIVE,
             'is_featured' => $existing?->is_featured ?? false,
         ];
 

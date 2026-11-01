@@ -19,6 +19,8 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        $middleware->replace(\Illuminate\Http\Middleware\TrustProxies::class, \App\Http\Middleware\TrustedProxies::class);
+
         $middleware->alias([
             'force.json' => ForceJson::class,
             'security.headers' => SecurityHeaders::class,

@@ -3,6 +3,7 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\TagResource\Pages;
+use App\Filament\Resources\Concerns\UsesResourcePermissions;
 use App\Models\Tag;
 use Filament\Forms;
 use Filament\Forms\Form;
@@ -12,6 +13,8 @@ use Filament\Tables\Table;
 
 class TagResource extends Resource
 {
+    use UsesResourcePermissions;
+
     protected static ?string $model = Tag::class;
     protected static ?string $navigationIcon = 'heroicon-o-hashtag';
     protected static ?string $navigationGroup = 'Taxonomy';

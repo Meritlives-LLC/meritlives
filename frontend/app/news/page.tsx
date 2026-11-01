@@ -7,9 +7,23 @@ export const metadata = {
   description: "MERITLIVES news and updates.",
 };
 
-export default async function NewsPage() {
+const NEWS_FILTERS = {
+  technology: "Technology",
+  business: "Business",
+  insights: "Insights",
+} as const;
+
+export default async function NewsPage({
+  searchParams: searchParamsPromise,
+}: {
+  searchParams: Promise<{ category?: string }>;
+}) {
+  const searchParams = await searchParamsPromise;
   try {
-    const result = await getNews();
+    const categorySlug = searchParams.category && searchParams.category in NEWS_FILTERS
+      ? searchParams.category as keyof typeof NEWS_FILTERS
+      : null;
+    const result = await getNews(`?page=1&per_page=6${categorySlug ? `&category=${categorySlug}` : ""}`);
     return (
       <main className="min-h-screen bg-white text-[#0D0D0D]">
         <header className="relative overflow-hidden border-b border-[#DDE2ED] bg-white">
@@ -21,12 +35,12 @@ export default async function NewsPage() {
               News &amp; Insights
             </h1>
             <p className="mt-5 max-w-2xl text-base leading-7 text-[#3A3F52] sm:text-lg sm:leading-8">
-              News and updates across technology, business and digital innovation.
+              News and updates across technology, business and insights.
             </p>
           </div>
         </header>
         <div className="mx-auto max-w-7xl px-5 py-9 sm:px-8 sm:py-12 lg:px-10 lg:py-16">
-          <NewsList items={result.data} />
+          <NewsList key={categorySlug ?? "all-news"} initialPage={result} initialCategory={categorySlug ? NEWS_FILTERS[categorySlug] : "All News"} />
         </div>
       </main>
     );

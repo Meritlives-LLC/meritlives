@@ -1,0 +1,37 @@
+{
+  "hero_title": "Technology Built Around Real Business Needs.",
+  "hero_description": "MERITLIVES LLC develops digital solutions that help businesses, institutions and entrepreneurs simplify operations, strengthen their digital presence and unlock new opportunities through technology.",
+  "hero_image": null,
+  "hero_image_alt": "A diverse group of professionals collaborating around laptops in a meeting; illustrative stock photography.",
+  "who_title": "We Build Technology That Moves Businesses Forward.",
+  "who_body": "MERITLIVES LLC is a technology-focused company delivering software solutions, digital platforms and business technology services. We bring together strategic thinking, thoughtful design and practical engineering to create digital experiences that solve meaningful problems.",
+  "story_title": "A Simple Belief. A Practical Purpose.",
+  "story_body": "MERITLIVES is driven by the belief that technology should make business processes simpler, more efficient and more accessible. We start with the people behind a business and the challenges they face. By connecting strategy, design and engineering, we turn complex requirements into practical tools that support everyday work and new possibilities.",
+  "section_image": null,
+  "section_image_alt": "Two professionals reviewing a digital project together at a computer; illustrative stock photography.",
+  "mission": "To help businesses and institutions grow through accessible, reliable and innovative digital solutions that solve real operational challenges.",
+  "vision": "To become a trusted technology partner for organizations seeking sustainable growth, digital transformation and meaningful innovation.",
+  "values": [
+    {"title": "Innovation", "description": "We explore better ways to solve problems, choosing ideas and technologies that make a practical difference."},
+    {"title": "Integrity", "description": "We communicate honestly, act responsibly and build trust through the commitments we keep."},
+    {"title": "Excellence", "description": "We bring care and discipline to every detail, from the first conversation to the systems we deliver."},
+    {"title": "Collaboration", "description": "We listen, share knowledge and work closely with our clients to build stronger solutions together."},
+    {"title": "Customer Focus", "description": "We shape our work around the people who use it and the business goals it needs to support."}
+  ],
+  "approach": [
+    {"title": "Discover", "description": "Understand business goals and challenges."},
+    {"title": "Design", "description": "Plan intuitive, scalable solutions."},
+    {"title": "Develop", "description": "Engineer reliable digital systems."},
+    {"title": "Deploy", "description": "Launch with quality and performance checks."},
+    {"title": "Support", "description": "Improve, maintain and optimize."}
+  ],
+  "service_slugs": ["web-development", "fintech", "edtech", "business-automation", "education", "real-estate", "security", "ongoing-maintenance"],
+  "product_slugs": ["skillhub", "bookmarketing", "wauabot", "audioflow", "politcs"],
+  "cta_title": "Let's Build What Comes Next.",
+  "cta_description": "Whether you're launching a new platform, improving an existing system or exploring digital transformation, MERITLIVES is ready to help turn your ideas into practical solutions.",
+  "cta_primary_label": "Start a Conversation",
+  "cta_secondary_label": "Explore Services",
+  "seo_title": "About Us",
+  "seo_description": "Meet MERITLIVES LLC: practical software, digital platforms and business technology services built around real business needs.",
+  "social_image": null
+}

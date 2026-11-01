@@ -4,6 +4,7 @@ namespace App\Http\Resources;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use App\Support\HtmlContent;
 
 class ProductResource extends JsonResource
 {
@@ -14,7 +15,7 @@ class ProductResource extends JsonResource
             'name' => $this->name,
             'slug' => $this->slug,
             'short_description' => $this->short_description,
-            'description' => $this->description,
+            'description' => HtmlContent::sanitize($this->description),
             'logo' => $this->logo,
             'cover_image' => $this->cover_image,
             'website_url' => $this->website_url,

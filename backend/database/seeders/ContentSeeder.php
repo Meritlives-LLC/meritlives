@@ -18,9 +18,13 @@ class ContentSeeder extends Seeder
         $categories = [
             ['name' => 'Technology', 'type' => 'news'],
             ['name' => 'Business', 'type' => 'news'],
-            ['name' => 'Digital Innovation', 'type' => 'news'],
-            ['name' => 'Digital Transformation', 'type' => 'blog'],
-            ['name' => 'Technology Business', 'type' => 'blog'],
+            ['name' => 'Insights', 'type' => 'news'],
+            ['name' => 'Company Updates', 'type' => 'blog'],
+            ['name' => 'Projects & Operations', 'type' => 'blog'],
+            ['name' => 'Industry Insights & Thought Leadership', 'type' => 'blog'],
+            ['name' => 'Team & Culture', 'type' => 'blog'],
+            ['name' => 'Knowledge Base', 'type' => 'blog'],
+            ['name' => 'Policies & Procedures', 'type' => 'blog'],
         ];
 
         foreach ($categories as $category) {

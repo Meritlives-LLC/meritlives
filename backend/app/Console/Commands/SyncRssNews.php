@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use App\Models\Category;
 use App\Models\News;
+use App\Services\NewsDiscovery\RssFeedParser;
 use Carbon\Carbon;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Http;
@@ -73,19 +74,16 @@ class SyncRssNews extends Command
                 continue;
             }
 
-            $xml = @simplexml_load_string($response->body(), 'SimpleXMLElement', LIBXML_NOCDATA);
-
-            if ($xml === false || ! isset($xml->channel->item)) {
-                $this->error("Could not parse RSS from {$feed['url']}");
+            try {
+                $xml = app(RssFeedParser::class)->parse($response->body());
+            } catch (\Throwable) {
+                $this->error("Could not safely parse RSS from {$feed['url']}");
                 $failed++;
 
                 continue;
             }
 
-            $category = Category::firstOrCreate(
-                ['slug' => Str::slug($feed['category'])],
-                ['name' => $feed['category'], 'type' => 'news', 'status' => 'active']
-            );
+            $category = null;
 
             $itemCount = 0;
 
@@ -118,6 +116,11 @@ class SyncRssNews extends Command
                     continue;
                 }
 
+                $category ??= Category::firstOrCreate(
+                    ['slug' => Str::slug($feed['category'])],
+                    ['name' => $feed['category'], 'type' => 'news', 'status' => 'active']
+                );
+
                 $attributes = [
                     'category_id' => $category->id,
                     'title' => $title,
@@ -127,17 +130,21 @@ class SyncRssNews extends Command
                     'source_url' => $link ?: $guid,
                     'image_url' => $imageUrl,
                     'published_at' => $publishedAt,
-                    'status' => 'published',
                     'featured' => false,
                 ];
 
                 $news = News::where('external_id', $guid)->first();
 
                 if ($news) {
+                    if ($news->status === 'published') {
+                        // Published editorial copy is immutable to feed synchronization.
+                        continue;
+                    }
                     $news->update($attributes);
                     $updated++;
                 } else {
                     $attributes['external_id'] = $guid;
+                    $attributes['status'] = 'pending';
                     News::create($attributes);
                     $created++;
                 }

@@ -5,24 +5,17 @@ import { formatNewsDate, getExternalNewsSource, getNewsCategoryLabel } from "../
 import { getWatchVideos } from "../lib/watch-queries";
 import ProductsList from "./ProductsList";
 import ServicesList from "./ServicesList";
-import { WatchVideoGrid, WatchVideoLoading } from "./WatchVideoGrid";
+import { FeaturedWatchCarousel, FeaturedWatchLoading } from "./FeaturedWatchCarousel";
 
 function StoryMetadata({ story }: { story: NewsItem }) {
-  const date = formatNewsDate(story.published_at);
   const author = story.author_name?.trim();
   const source = getExternalNewsSource(story);
 
-  if (!author && !source && !date) return null;
+  if (!author && !source) return null;
 
   return (
-    <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs leading-5 text-[#5D6472]">
-      {(author || date) && (
-        <span>
-          {author && <><span className="font-semibold text-[#252832]">By </span>{author}</>}
-          {author && date && <> {"\u00b7"} </>}
-          {date && <><span className="font-semibold text-[#252832]">Published </span><time dateTime={story.published_at || undefined}>{date}</time></>}
-        </span>
-      )}
+    <div className="mt-auto flex flex-wrap items-center gap-x-3 gap-y-1 pt-5 text-sm leading-5 text-[#5D6472]">
+      {author && <span><span className="font-medium text-[#252832]">By </span>{author}</span>}
       {source && <span className="wrap-break-word">Source: {source.name}</span>}
     </div>
   );
@@ -32,13 +25,13 @@ function StoryImage({ story }: { story: NewsItem }) {
   const imageUrl = story.featured_image || story.image_url;
 
   return (
-    <div className="relative aspect-16/10 overflow-hidden bg-[#F2F4F8]">
+    <div className="relative aspect-[16/10] w-full overflow-hidden rounded-xl bg-[#F2F4F8]">
       {imageUrl ? (
         <img
           src={imageUrl}
           alt=""
           loading="lazy"
-          className="h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-[1.035] motion-reduce:transform-none motion-reduce:transition-none"
+          className="h-full w-full object-cover transition-transform duration-300 ease-out group-hover:scale-[1.025] motion-reduce:transform-none motion-reduce:transition-none"
         />
       ) : (
         <div aria-hidden="true" className="absolute inset-0 flex items-center justify-center">
@@ -51,13 +44,9 @@ function StoryImage({ story }: { story: NewsItem }) {
 }
 
 export function FeaturedStories({ stories }: { stories: NewsItem[] }) {
-  const [leadStory, ...supportingStories] = stories;
-  const sideStories = supportingStories.slice(0, 1);
-  const additionalStories = supportingStories.slice(1);
-
   return (
     <section aria-labelledby="featured-stories-title" className="bg-white text-[#0D0D0D]">
-      <div className="ml-container py-16 md:py-20 lg:py-24">
+      <div className="ml-container pt-3 pb-16 md:pt-5 md:pb-20 lg:pt-6 lg:pb-24">
         <div className="mb-9 flex flex-col gap-5 border-b border-[#D5D8DE] pb-6 sm:flex-row sm:items-end sm:justify-between md:mb-11">
           <div>
             <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#CC1111]">MERITLIVES / Newsroom</p>
@@ -77,102 +66,47 @@ export function FeaturedStories({ stories }: { stories: NewsItem[] }) {
           </Link>
         </div>
 
-        {leadStory ? (
-          <>
-            <div className="grid gap-8 lg:grid-cols-[minmax(0,1.55fr)_minmax(17rem,0.75fr)] lg:gap-10 xl:gap-14">
-              <article>
-                <Link
-                  href={`/news/${leadStory.slug}`}
-                  className="group block focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#1A3BBF]"
-                  aria-label={`Read featured story: ${leadStory.title}`}
-                >
-                  <StoryImage story={leadStory} />
-                  <div className="mt-5 max-w-3xl md:mt-6">
-                    {getNewsCategoryLabel(leadStory) && (
-                      <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#1A3BBF]">
-                        {getNewsCategoryLabel(leadStory)}
-                      </p>
-                    )}
-                    <h3
-                      className="mt-2 text-[2rem] font-semibold leading-[1.04] tracking-tighter transition-colors group-hover:text-[#1A3BBF] sm:text-4xl md:text-5xl xl:text-[3.5rem]"
-                      style={{ fontFamily: 'var(--font-grotesk), "Space Grotesk", sans-serif' }}
-                    >
-                      {leadStory.title}
-                    </h3>
-                    {leadStory.excerpt && (
-                      <p className="mt-4 max-w-2xl text-base leading-7 text-[#3A3F52] md:text-[1.0625rem]">
-                        {leadStory.excerpt}
-                      </p>
-                    )}
-                    <StoryMetadata story={leadStory} />
-                  </div>
-                </Link>
-              </article>
+        {stories.length > 0 ? (
+          <div className="grid grid-cols-1 gap-x-8 gap-y-12 sm:grid-cols-2 sm:gap-x-7 lg:grid-cols-3 lg:gap-x-9 lg:gap-y-14">
+            {stories.map((story) => {
+              const category = getNewsCategoryLabel(story);
+              const published = formatNewsDate(story.published_at);
 
-              {sideStories.length > 0 && (
-                <aside aria-label="More featured stories" className="border-t border-[#D5D8DE] lg:border-l lg:border-t-0 lg:pl-8">
-                  <div className="divide-y divide-[#D5D8DE]">
-                    {sideStories.map((story) => (
-                      <article key={story.id} className="py-6 first:pt-6 lg:py-6 lg:first:pt-0">
-                        <Link
-                          href={`/news/${story.slug}`}
-                          className="group grid grid-cols-[7rem_minmax(0,1fr)] items-start gap-4 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#1A3BBF] sm:grid-cols-[9rem_minmax(0,1fr)] lg:grid-cols-1"
-                          aria-label={`Read story: ${story.title}`}
-                        >
-                          <StoryImage story={story} />
-                          <div>
-                            {getNewsCategoryLabel(story) && (
-                              <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#CC1111]">
-                                {getNewsCategoryLabel(story)}
-                              </p>
-                            )}
-                            <h3
-                              className="mt-1 text-lg font-semibold leading-snug tracking-tight text-[#0D0D0D] transition-colors group-hover:text-[#1A3BBF] sm:text-xl"
-                              style={{ fontFamily: 'var(--font-grotesk), "Space Grotesk", sans-serif' }}
-                            >
-                              {story.title}
-                            </h3>
-                            <StoryMetadata story={story} />
-                          </div>
-                        </Link>
-                      </article>
-                    ))}
-                  </div>
-                </aside>
-              )}
-            </div>
-
-            {additionalStories.length > 0 && (
-              <div className="mt-10 border-t border-[#D5D8DE] pt-7 md:mt-12 md:pt-9">
-                {additionalStories.map((story, index) => (
-                  <article key={story.id} className={index > 0 ? "mt-7 border-t border-[#D5D8DE] pt-7" : ""}>
-                    <Link
-                      href={`/news/${story.slug}`}
-                      className="group grid items-center gap-5 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#1A3BBF] sm:grid-cols-[minmax(0,1fr)_minmax(15rem,0.8fr)] sm:gap-8 lg:grid-cols-[minmax(0,1.15fr)_minmax(22rem,0.85fr)] lg:gap-12"
-                      aria-label={`Read story: ${story.title}`}
-                    >
-                      <div className="sm:py-3">
-                        {getNewsCategoryLabel(story) && (
-                          <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#1A3BBF]">
-                            {getNewsCategoryLabel(story)}
-                          </p>
-                        )}
-                        <h3
-                          className="mt-2 text-2xl font-semibold leading-tight tracking-[-0.04em] transition-colors group-hover:text-[#CC1111] sm:text-3xl md:text-4xl"
-                          style={{ fontFamily: 'var(--font-grotesk), "Space Grotesk", sans-serif' }}
-                        >
-                          {story.title}
-                        </h3>
-                        {story.excerpt && <p className="mt-3 max-w-2xl text-sm leading-6 text-[#3A3F52] sm:text-base sm:leading-7">{story.excerpt}</p>}
-                        <StoryMetadata story={story} />
+              return (
+                <article key={story.id} className="h-full">
+                  <Link
+                    href={`/news/${story.slug}`}
+                    className="group flex h-full flex-col rounded-xl focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#1A3BBF]"
+                    aria-label={`Read news article: ${story.title}`}
+                  >
+                    <StoryImage story={story} />
+                    <div className="flex flex-1 flex-col pt-5">
+                      <div className="flex min-h-5 items-center justify-between gap-3 text-xs sm:text-sm">
+                        <span className="truncate font-semibold uppercase tracking-[0.12em] text-[#CC1111]">
+                          {category || "News"}
+                        </span>
+                        <time className="shrink-0 text-[#687080]" dateTime={story.published_at || undefined}>
+                          {published || "Date unavailable"}
+                        </time>
                       </div>
-                      <StoryImage story={story} />
-                    </Link>
-                  </article>
-                ))}
-              </div>
-            )}
-          </>
+                      <h3
+                        className="mt-3 line-clamp-3 text-xl font-semibold leading-snug tracking-[-0.025em] text-[#0D0D0D] transition-colors group-hover:text-[#1A3BBF] sm:text-2xl"
+                        style={{ fontFamily: 'var(--font-grotesk), "Space Grotesk", sans-serif' }}
+                      >
+                        {story.title}
+                      </h3>
+                      {story.excerpt && (
+                        <p className="mt-3 line-clamp-3 text-sm leading-6 text-[#4B5260] sm:text-base sm:leading-7">
+                          {story.excerpt}
+                        </p>
+                      )}
+                      <StoryMetadata story={story} />
+                    </div>
+                  </Link>
+                </article>
+              );
+            })}
+          </div>
         ) : (
           <div className="border-y border-[#DDE2ED] py-12">
             <p className="text-lg text-[#3A3F52]">There are no featured stories available right now.</p>
@@ -181,6 +115,36 @@ export function FeaturedStories({ stories }: { stories: NewsItem[] }) {
             </Link>
           </div>
         )}
+      </div>
+    </section>
+  );
+}
+
+export function BigNews({ story }: { story: NewsItem | null }) {
+  if (!story) return null;
+  const category = getNewsCategoryLabel(story);
+  const published = formatNewsDate(story.published_at);
+
+  return (
+    <section aria-labelledby="big-news-title" className="bg-white text-[#0D0D0D]">
+      <div className="ml-container pt-8 pb-10 md:pt-12 md:pb-14">
+        <p className="mb-5 text-[10px] font-semibold uppercase tracking-[0.2em] text-[#CC1111]">Big News</p>
+        <article className="grid gap-6 border-y border-[#D5D8DE] py-6 md:grid-cols-[1.2fr_0.8fr] md:items-center md:gap-10 md:py-8">
+          <Link href={`/news/${story.slug}`} className="group block overflow-hidden rounded-xl focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#1A3BBF]" aria-label={`Read featured story: ${story.title}`}>
+            <StoryImage story={story} />
+          </Link>
+          <div>
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs sm:text-sm">
+              <span className="font-semibold uppercase tracking-[0.12em] text-[#CC1111]">{category || "News"}</span>
+              <time className="text-[#687080]" dateTime={story.published_at || undefined}>{published || "Date unavailable"}</time>
+            </div>
+            <Link href={`/news/${story.slug}`} className="group focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#1A3BBF]">
+              <h2 id="big-news-title" className="mt-3 text-3xl font-semibold leading-tight tracking-[-0.045em] transition-colors group-hover:text-[#1A3BBF] md:text-4xl" style={{ fontFamily: 'var(--font-grotesk), "Space Grotesk", sans-serif' }}>{story.title}</h2>
+            </Link>
+            {story.excerpt && <p className="mt-3 text-sm leading-6 text-[#4B5260] sm:text-base sm:leading-7">{story.excerpt}</p>}
+            {story.author_name?.trim() && <p className="mt-4 text-sm font-medium text-[#252832]">By {story.author_name.trim()}</p>}
+          </div>
+        </article>
       </div>
     </section>
   );
@@ -211,17 +175,8 @@ function WatchSectionFrame({ children }: { children: ReactNode }) {
 
 async function WatchSectionContent() {
   try {
-    const result = await getWatchVideos(1, 3);
-
-    if (result.data.length === 0) {
-      return (
-        <WatchSectionFrame>
-          <p className="border-y border-[#D5D8DE] py-8 text-sm text-[#5D6472]">No Watch videos are available right now.</p>
-        </WatchSectionFrame>
-      );
-    }
-
-    return <WatchSectionFrame><WatchVideoGrid videos={result.data} /></WatchSectionFrame>;
+    const result = await getWatchVideos(1, 12);
+    return <WatchSectionFrame><FeaturedWatchCarousel videos={result.data} /></WatchSectionFrame>;
   } catch {
     return (
       <WatchSectionFrame>
@@ -235,7 +190,7 @@ async function WatchSectionContent() {
 
 export function MeritlivesWatch() {
   return (
-    <Suspense fallback={<WatchSectionFrame><WatchVideoLoading compact /></WatchSectionFrame>}>
+    <Suspense fallback={<WatchSectionFrame><FeaturedWatchLoading /></WatchSectionFrame>}>
       <WatchSectionContent />
     </Suspense>
   );

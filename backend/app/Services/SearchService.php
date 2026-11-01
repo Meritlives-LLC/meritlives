@@ -27,10 +27,14 @@ class SearchService
     {
         return News::query()
             ->with('category')
-            ->where('status', 'published')
+            ->publiclyEligible()
             ->where(function ($query) use ($term) {
                 $query->where('title', 'like', "%{$term}%")
-                    ->orWhere('excerpt', 'like', "%{$term}%");
+                    ->orWhere('excerpt', 'like', "%{$term}%")
+                    ->orWhere('content', 'like', "%{$term}%")
+                    ->orWhereHas('category', fn ($category) =>
+                        $category->where('name', 'like', "%{$term}%")
+                    );
             })
             ->latest('published_at')
             ->limit(10)
@@ -41,11 +45,14 @@ class SearchService
     {
         return BlogPost::query()
             ->with(['category', 'author', 'tags'])
-            ->where('status', 'published')
+            ->publiclyEligible()
             ->where(function ($query) use ($term) {
                 $query->where('title', 'like', "%{$term}%")
                     ->orWhere('excerpt', 'like', "%{$term}%")
-                    ->orWhere('content', 'like', "%{$term}%");
+                    ->orWhere('content', 'like', "%{$term}%")
+                    ->orWhereHas('category', fn ($category) =>
+                        $category->where('name', 'like', "%{$term}%")
+                    );
             })
             ->latest('published_at')
             ->limit(10)

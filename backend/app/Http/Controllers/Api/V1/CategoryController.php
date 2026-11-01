@@ -11,13 +11,14 @@ class CategoryController extends Controller
 {
     public function index(Request $request)
     {
+        $pageSize = \App\Support\PublicPagination::size($request);
         $categories = Category::query()
             ->where('status', 'active')
             ->when($request->filled('type'), fn ($query) =>
                 $query->where('type', $request->string('type')->toString())
             )
             ->orderBy('name')
-            ->paginate($request->integer('per_page', 50));
+            ->paginate($pageSize);
 
         return CategoryResource::collection($categories);
     }

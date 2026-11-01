@@ -3,6 +3,7 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\NewsletterSubscriberResource\Pages;
+use App\Filament\Resources\Concerns\UsesResourcePermissions;
 use App\Models\NewsletterSubscriber;
 use Filament\Forms;
 use Filament\Forms\Form;
@@ -12,6 +13,13 @@ use Filament\Tables\Table;
 
 class NewsletterSubscriberResource extends Resource
 {
+    use UsesResourcePermissions;
+
+    protected static function permissions(): array
+    {
+        return ['view' => 'manage_subscribers', 'create' => 'manage_subscribers', 'edit' => 'manage_subscribers', 'delete' => 'manage_subscribers'];
+    }
+
     protected static ?string $model = NewsletterSubscriber::class;
     protected static ?string $navigationIcon = 'heroicon-o-envelope';
     protected static ?string $navigationGroup = 'Engagement';

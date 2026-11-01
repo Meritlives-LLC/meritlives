@@ -1,12 +1,11 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
+import { useState } from "react";
+import { getWatchEmbedUrl } from "../lib/watch-playback";
 import type { WatchVideo } from "../types/watch";
-
-function youtubeUrl(videoId: string): string | null {
-  return /^[A-Za-z0-9_-]{11}$/.test(videoId)
-    ? `https://www.youtube.com/watch?v=${encodeURIComponent(videoId)}`
-    : null;
-}
+import { WatchVideoPlayer } from "./WatchVideoPlayer";
 
 function thumbnailUrl(value?: string | null): string | null {
   if (!value) return null;
@@ -23,35 +22,44 @@ function thumbnailUrl(value?: string | null): string | null {
   return null;
 }
 
-function WatchVideoCard({ video }: { video: WatchVideo }) {
-  const href = youtubeUrl(video.youtube_video_id);
+function WatchVideoCard({ video, onPlay }: { video: WatchVideo; onPlay: (video: WatchVideo) => void }) {
+  const playable = getWatchEmbedUrl(video) !== null;
   const image = thumbnailUrl(video.thumbnail_url);
 
   return (
-    <article className="group min-w-0">
-      {href ? (
-        <a
-          href={href}
-          target="_blank"
-          rel="noopener noreferrer"
-          aria-label={`Watch ${video.title} on YouTube (opens in a new tab)`}
-          className="block overflow-hidden bg-[#F0F1F3]"
-        >
-          {image ? (
-            <Image
-              src={image}
-              alt=""
-              width={640}
-              height={360}
-              className="aspect-video w-full object-cover transition-transform duration-300 group-hover:scale-[1.02]"
-            />
-          ) : (
-            <div className="grid aspect-video place-items-center text-xs text-[#5D6472]">Thumbnail unavailable</div>
-          )}
-        </a>
-      ) : (
-        <div className="grid aspect-video place-items-center bg-[#F0F1F3] text-xs text-[#5D6472]">Video unavailable</div>
-      )}
+    <article
+      role={playable ? "button" : undefined}
+      tabIndex={playable ? 0 : undefined}
+      aria-label={playable ? `Play ${video.title} in the MERITLIVES video player` : undefined}
+      onClick={playable ? () => onPlay(video) : undefined}
+      onKeyDown={playable ? (event) => {
+        if ((event.key === "Enter" || event.key === " ") && !event.repeat) {
+          event.preventDefault();
+          onPlay(video);
+        }
+      } : undefined}
+      className={`group min-w-0 ${playable ? "cursor-pointer rounded-sm focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#1A3BBF]" : ""}`}
+    >
+      <div className="relative overflow-hidden bg-[#F0F1F3]">
+        {image ? (
+          <Image
+            src={image}
+            alt=""
+            width={640}
+            height={360}
+            className="aspect-video w-full object-cover transition-transform duration-300 group-hover:scale-[1.02]"
+          />
+        ) : (
+          <div className="grid aspect-video place-items-center text-xs text-[#5D6472]">Thumbnail unavailable</div>
+        )}
+        {playable && (
+          <span aria-hidden="true" className="absolute inset-0 grid place-items-center bg-black/10 transition-colors group-hover:bg-black/20">
+            <span className="grid h-14 w-14 place-items-center rounded-full bg-white text-[#CC1111] shadow-sm">
+              <svg viewBox="0 0 24 24" className="ml-1 h-7 w-7 fill-current"><path d="M8 5.5v13l10-6.5-10-6.5Z" /></svg>
+            </span>
+          </span>
+        )}
+      </div>
 
       <div className="pt-4">
         <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-[#737B89]">
@@ -61,28 +69,25 @@ function WatchVideoCard({ video }: { video: WatchVideo }) {
           {video.is_featured && <span className="text-[#CC1111]">Featured</span>}
         </div>
         <h3 className="mt-2 text-lg font-semibold leading-snug tracking-tight text-[#171A20]">
-          {href ? (
-            <a href={href} target="_blank" rel="noopener noreferrer" className="transition-colors hover:text-[#1A3BBF]">
-              {video.title}
-            </a>
-          ) : video.title}
+          {video.title}
         </h3>
         {video.description && <p className="mt-2 line-clamp-3 text-sm leading-6 text-[#5D6472]">{video.description}</p>}
-        {href && (
-          <a href={href} target="_blank" rel="noopener noreferrer" className="mt-3 inline-flex text-xs font-semibold text-[#1A3BBF] underline underline-offset-4">
-            Watch video <span className="sr-only">: {video.title}</span>
-          </a>
-        )}
+        {playable && <span className="mt-3 inline-flex text-xs font-semibold text-[#1A3BBF] underline underline-offset-4">Play video in MERITLIVES</span>}
       </div>
     </article>
   );
 }
 
 export function WatchVideoGrid({ videos }: { videos: WatchVideo[] }) {
+  const [playingVideo, setPlayingVideo] = useState<WatchVideo | null>(null);
+
   return (
-    <div className="grid gap-x-6 gap-y-9 sm:grid-cols-2 lg:grid-cols-3">
-      {videos.map((video) => <WatchVideoCard key={video.id} video={video} />)}
-    </div>
+    <>
+      <div className="grid gap-x-6 gap-y-9 sm:grid-cols-2 lg:grid-cols-3">
+        {videos.map((video) => <WatchVideoCard key={video.id} video={video} onPlay={setPlayingVideo} />)}
+      </div>
+      <WatchVideoPlayer video={playingVideo} onClose={() => setPlayingVideo(null)} />
+    </>
   );
 }
 

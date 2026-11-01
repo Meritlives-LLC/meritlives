@@ -11,11 +11,12 @@ class ServiceController extends Controller
 {
     public function index(Request $request)
     {
+        $pageSize = \App\Support\PublicPagination::size($request);
         $services = Service::query()
             ->where('status', 'published')
             ->when($request->boolean('featured'), fn ($query) => $query->where('featured', true))
             ->orderBy('sort_order')
-            ->paginate($request->integer('per_page', 12));
+            ->paginate($pageSize);
 
         return ServiceResource::collection($services);
     }

@@ -11,9 +11,7 @@ class WatchController extends Controller
 {
     public function index(Request $request)
     {
-        $validated = $request->validate([
-            'per_page' => ['sometimes', 'integer', 'min:1', 'max:50'],
-        ]);
+        $pageSize = \App\Support\PublicPagination::size($request);
 
         $videos = WatchVideo::query()
             ->with('source:id,name')
@@ -21,7 +19,7 @@ class WatchController extends Controller
             ->orderByDesc('is_featured')
             ->orderByDesc('published_at')
             ->orderByDesc('id')
-            ->paginate($validated['per_page'] ?? 12);
+            ->paginate($pageSize);
 
         return WatchVideoResource::collection($videos);
     }

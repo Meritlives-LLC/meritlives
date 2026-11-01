@@ -1,6 +1,6 @@
 import type { NewsItem } from "../types/api";
 
-const APPROVED_NEWS_CATEGORIES = ["Technology", "Business", "Digital Innovation"];
+const APPROVED_NEWS_CATEGORIES = ["Technology", "Business", "Insights"];
 
 export function getNewsCategoryLabel(story: Pick<NewsItem, "category">): string | undefined {
   const name = story.category?.name;

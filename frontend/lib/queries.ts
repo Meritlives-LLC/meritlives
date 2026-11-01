@@ -2,6 +2,7 @@ import { apiFetch } from "./api";
 import type {
   ApiResponse,
   BlogPost,
+  Category,
   NewsItem,
   Paginated,
   Product,
@@ -28,8 +29,11 @@ export async function getService(slug: string) {
   });
 }
 
-export async function getNews(params = "") {
-  return apiFetch<Paginated<NewsItem>>(`/news${params}`, { revalidate: 60 });
+export async function getNews(params = "", options: { cache?: RequestCache } = {}) {
+  return apiFetch<Paginated<NewsItem>>(
+    `/news${params}`,
+    options.cache === "no-store" ? { cache: "no-store" } : { revalidate: 60 }
+  );
 }
 
 export async function getNewsItem(slug: string) {
@@ -38,12 +42,44 @@ export async function getNewsItem(slug: string) {
   });
 }
 
-export async function getBlogPosts(params = "") {
-  return apiFetch<Paginated<BlogPost>>(`/blog${params}`, { revalidate: 60 });
+export async function getBlogPosts(params = "", options: { cache?: RequestCache } = {}) {
+  return apiFetch<Paginated<BlogPost>>(
+    `/blog${params}`,
+    options.cache === "no-store" || options.cache === undefined
+      ? { cache: "no-store" }
+      : { revalidate: 60 }
+  );
+}
+
+export async function getBlogCategories() {
+  return apiFetch<Paginated<Category>>("/categories?type=blog&per_page=50", {
+    cache: "no-store",
+  });
+}
+
+export async function getNewsCategories() {
+  return apiFetch<Paginated<Category>>("/categories?type=news&per_page=50", {
+    cache: "no-store",
+  });
 }
 
 export async function getBlogPost(slug: string) {
   return apiFetch<ApiResponse<BlogPost>>(`/blog/${encodeURIComponent(slug)}`, {
-    revalidate: 60,
+    cache: "no-store",
   });
+}
+
+
+export interface EditorialSearchResults {
+  news: NewsItem[];
+  blog: BlogPost[];
+}
+
+export async function searchEditorialContent(query: string, options: { cache?: RequestCache } = {}) {
+  return apiFetch<ApiResponse<EditorialSearchResults>>(
+    `/search?q=${encodeURIComponent(query)}`,
+    options.cache === "no-store" || options.cache === undefined
+      ? { cache: "no-store" }
+      : { revalidate: 15 }
+  );
 }

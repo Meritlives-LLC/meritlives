@@ -4,6 +4,7 @@ namespace App\Http\Resources;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use App\Support\HtmlContent;
 
 class ServiceResource extends JsonResource
 {
@@ -14,7 +15,7 @@ class ServiceResource extends JsonResource
             'name' => $this->name,
             'slug' => $this->slug,
             'short_description' => $this->short_description,
-            'description' => $this->description,
+            'description' => HtmlContent::sanitize($this->description),
             'icon' => $this->icon,
             'featured' => $this->featured,
             'sort_order' => $this->sort_order,

@@ -17,12 +17,12 @@ return new class extends Migration
             $table->text('description')->nullable();
             $table->text('thumbnail_url')->nullable();
             $table->text('video_url');
-            $table->string('category', 64);
+            $table->string('category', 50);
             $table->timestamp('published_at')->nullable()->index();
             $table->string('duration', 32)->nullable();
             $table->decimal('relevance_score', 5, 2)->default(0);
             $table->decimal('quality_score', 5, 2)->default(0);
-            $table->string('status', 32)->default('inactive')->index();
+            $table->string('status', 20)->default('inactive')->index();
             $table->boolean('is_featured')->default(false);
             $table->timestamps();
 

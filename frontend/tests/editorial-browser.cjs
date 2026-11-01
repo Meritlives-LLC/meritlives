@@ -1,0 +1,107 @@
+const { chromium } = require('@playwright/test');
+const fs = require('node:fs');
+const path = require('node:path');
+const assert = require('node:assert/strict');
+const origin = 'http://127.0.0.1:3187';
+const evidence = path.resolve('../backend/tests/browser/evidence');
+fs.mkdirSync(evidence,{recursive:true});
+const run=Date.now(); const results=[];const focusOnly=process.argv.includes('--focus');
+const record=(width,scenario,pass,detail='')=>{results.push({width,scenario,result:pass?'PASS':'FAIL',detail});fs.writeFileSync(path.join(evidence,focusOnly?'focus-results.json':'results.json'),JSON.stringify(results,null,2));console.log(width,pass?'PASS':'FAIL',scenario,detail);};
+(async()=>{
+ const browser=await chromium.launch({channel:'chrome',headless:true});
+ try { for(const width of [1440,768,390]) {
+  const context=await browser.newContext({viewport:{width,height:1000},serviceWorkers:'block'});
+  let delay=false; const errors=[]; const blocked=new Set();
+  await context.route('**/*',async route=>{if(new URL(route.request().url()).origin!==origin){blocked.add(new URL(route.request().url()).origin);return route.abort();}if(delay&&route.request().url().endsWith('/livewire/update'))await new Promise(r=>setTimeout(r,1000));return route.continue();});
+  const page=await context.newPage();page.setDefaultTimeout(25000);page.setDefaultNavigationTimeout(90000);
+  page.on('pageerror',e=>errors.push(e.message));
+  const shot=async name=>{await page.screenshot({path:path.join(evidence,`${width}-${name}.png`),fullPage:true});};
+  const modal=()=>page.locator('.fi-modal-window:visible');
+  const field=name=>page.locator(`[id="data.${name}"]`);
+  const mf=name=>modal().locator(`[id="mountedActionsData.0.${name}"]`);
+  const open=async()=>{if(width<1024 && await page.locator('.fi-sidebar-close-overlay:visible').count()){await page.locator('.fi-sidebar-close-overlay:visible').click({position:{x:width-10,y:500}});await page.waitForTimeout(400);}await page.getByRole('button',{name:'AI Assist',exact:true}).focus();await page.keyboard.press('Enter');await mf('topic').waitFor();};
+  const generate=async op=>{
+   await open();await mf('operation').selectOption(op);await mf('topic').fill(`FICTIONAL QA ${width} imaginary moon library`);
+   await mf('source_text').fill('TEST ONLY: fictional robots read imaginary books. No real event.');
+   await modal().getByRole('button',{name:'Generate suggestions',exact:true}).click();
+   await page.getByRole('button',{name:'Review AI suggestions',exact:true}).waitFor();
+  };
+  const review=async()=>{await page.getByRole('button',{name:'Review AI suggestions',exact:true}).click();await mf('body').waitFor();};
+  const apply=async(fields)=>{
+   for(const f of fields)await modal().locator(`input[type=checkbox][value="${f}"]`).check();
+   await modal().getByRole('switch').click();
+   await modal().getByRole('button',{name:'Apply selected suggestions',exact:true}).click();
+   await modal().waitFor({state:'hidden'});
+  };
+  try {
+   await page.goto(origin+'/admin/news/create',{waitUntil:'domcontentloaded'});
+   assert.match(page.url(),/\/admin\/login/);record(width,'Guest editor route redirects to login',true);
+   await page.locator('input[type=email]').fill(`editor${width}@example.test`);
+   await page.locator('[id="data.password"]').fill('Disposable-Editor-Only-483!');
+   await page.getByRole('button',{name:'Sign in',exact:true}).click();
+   await page.waitForURL(u=>u.pathname!='/admin/login',{waitUntil:'domcontentloaded'});record(width,'Actual admin login',true);
+   await page.goto(origin+'/admin/news/create',{waitUntil:'domcontentloaded'});
+   await field('title').fill(`Original fictional News ${width}`);await field('slug').fill(`fictional-news-${width}-${run}`);
+   await field('excerpt').fill('Preserve this original excerpt.');await field('source_name').fill('Fictional QA source');await field('source_url').fill(`https://example.test/fictional-qa-${width}-${run}`);
+   await open();await mf('topic').fill(`FICTIONAL QA ${width}`);
+   record(width,'Modal opens with focus inside',await modal().evaluate(el=>el.contains(document.activeElement)));
+   await page.keyboard.press('Tab');record(width,'Tab stays inside modal',await modal().evaluate(el=>el.contains(document.activeElement)));
+   await page.keyboard.press('Shift+Tab');record(width,'Shift Tab stays inside modal',await modal().evaluate(el=>el.contains(document.activeElement)));
+   await shot('news-assist');
+   record(width,'AI modal fits viewport',await modal().evaluate(el=>{const b=el.getBoundingClientRect();return b.left>=0&&b.right<=innerWidth+1&&el.scrollWidth<=el.clientWidth+1;}));
+   await page.keyboard.press('Escape');await modal().waitFor({state:'hidden'});
+   await page.waitForFunction(()=>document.querySelector('[data-editorial-trigger=assist]')===document.activeElement,{},{timeout:7000}).catch(()=>{});
+   record(width,'Escape closes and returns focus',await page.getByRole('button',{name:'AI Assist',exact:true}).evaluate(el=>el===document.activeElement),await page.evaluate(()=>document.activeElement.outerHTML.slice(0,220)));
+   if(focusOnly){console.log('FOCUS HANDLER',await page.getByRole('button',{name:'AI Assist',exact:true}).getAttribute('x-on:close-modal.window'));console.log('JS ERRORS',errors);await context.close();continue;}
+   await open();await mf('topic').fill(`FICTIONAL QA ${width}`);
+   await modal().getByRole('button',{name:'Generate suggestions',exact:true}).click();
+   await modal().getByText('Paste source text or editor-verified facts. URLs are not fetched or verified.',{exact:true}).waitFor();
+   const sourceWrap=mf('source_text').locator('xpath=ancestor::div[contains(@class,"fi-fo-field-wrp")][1]');
+   record(width,'Missing News source error beside source field',(await sourceWrap.innerText()).includes('Paste source text'));
+   await shot('news-source-validation');
+   await mf('source_text').fill('TEST ONLY fictional robots read imaginary books. No real event.');
+   delay=true;await modal().getByRole('button',{name:'Generate suggestions',exact:true}).click();
+   await modal().locator('.animate-spin:visible').first().waitFor();
+   record(width,'Generation shows loading indicator',await modal().locator('.animate-spin:visible').count()>0);
+   await shot('news-loading');delay=false;
+   await page.getByRole('button',{name:'Review AI suggestions',exact:true}).waitFor();
+   record(width,'Generation preserves original editor title',(await field('title').inputValue())===`Original fictional News ${width}`);
+   await review();
+   record(width,'Suggestion preview fits viewport',await modal().evaluate(el=>{const b=el.getBoundingClientRect();return b.left>=0&&b.right<=innerWidth+1&&el.scrollWidth<=el.clientWidth+1;}));
+   await page.keyboard.press('Escape');await modal().waitFor({state:'hidden'});
+   await page.waitForFunction(()=>document.querySelector('[data-editorial-trigger=review]')===document.activeElement,{},{timeout:7000});
+   record(width,'Review closes and restores focus; preview can reopen',true);await review();
+   for(const f of ['title','body','excerpt','seo_title','seo_description','slug'])assert.ok(await mf(f).inputValue());
+   assert.equal(await modal().locator('input[type=checkbox]:checked').count(),0);record(width,'News preview complete and no fields preselected',true);
+   await mf('title').fill(`Human edited fictional News ${width}`);await modal().locator('input[type=checkbox][value="title"]').check();await modal().locator('input[type=checkbox][value="body"]').check();
+   await modal().getByRole('button',{name:'Apply selected suggestions',exact:true}).click();
+   await modal().getByText(/field must be accepted/).waitFor();record(width,'Replacement confirmation required',true);
+   await shot('news-confirmation');await modal().getByRole('switch').click();await modal().getByRole('button',{name:'Apply selected suggestions',exact:true}).click();await modal().waitFor({state:'hidden'});
+   assert.equal(await field('title').inputValue(),`Human edited fictional News ${width}`);assert.equal(await field('slug').inputValue(),`fictional-news-${width}-${run}`);assert.equal(await field('excerpt').inputValue(),'Preserve this original excerpt.');record(width,'Edited preview selectively applies and preserves unselected fields',true);
+   if(width===1440){
+    await field('source_url').fill('https://example.test/fictional-qa');
+    await page.getByRole('button',{name:'Create',exact:true}).click();
+    await page.getByText('The source url has already been taken.',{exact:true}).waitFor();
+    record(width,'Duplicate News source rejected beside field without server error',true);await shot('news-duplicate-source');
+    await field('source_url').fill(`https://example.test/fictional-qa-${width}-${run}`);
+   }
+   await field('status').selectOption('published');await page.getByRole('button',{name:'Create',exact:true}).click();await page.waitForURL(/\/admin\/news\/\d+\/edit/,{waitUntil:'domcontentloaded'});
+   assert.equal(await field('status').inputValue(),'pending');record(width,'News database save forces pending despite published selection',true);await shot('news-saved');
+   await page.goto(origin+'/admin/blog-posts/create',{waitUntil:'domcontentloaded'});await field('title').fill(`Fictional Blog ${width}`);await field('slug').fill(`fictional-blog-${width}-${run}`);
+   await generate('outline');await review();assert.match(await mf('body').inputValue(),/Evidence to verify/);await shot('blog-outline');await apply(['body']);record(width,'Blog outline applies only on confirmation',true);
+   const editor=page.locator('trix-editor');await editor.fill('Old fictional introduction');await editor.press('Enter');await editor.press('Enter');await editor.pressSequentially('Keep this evidence.');
+   await generate('introduction');await review();await mf('body').fill('Improved fictional introduction.');await apply(['body']);
+   assert.match(await editor.innerText(),/Keep this evidence/);assert.match(await editor.innerText(),/Improved fictional introduction/);record(width,'Blog introduction preserves remaining unsaved content',true);
+   await generate('seo');await review();await mf('seo_title').fill('Fictional browser SEO');await apply(['seo_title','seo_description']);assert.equal(await field('seo_title').inputValue(),'Fictional browser SEO');assert.match(await editor.innerText(),/Keep this evidence/);record(width,'Blog SEO applies without replacing body',true);
+   await generate('category');await review();const category=mf('category_id');const options=await category.locator('option').evaluateAll(ns=>ns.filter(n=>n.value).map(n=>({id:n.value,text:n.textContent})));assert.ok(options.length);await category.selectOption(options[0].id);await shot('blog-category');await apply(['category_id']);record(width,'Existing Blog category selectable and applied',true,options[0].text);
+   await field('status').selectOption('published');const approval=page.getByRole('switch',{name:'Approved for public release'});await approval.click();
+   await page.getByRole('button',{name:'Create',exact:true}).click();await page.waitForURL(/\/admin\/blog-posts\/\d+\/edit/,{waitUntil:'domcontentloaded'});
+   assert.equal(await field('status').inputValue(),'draft');assert.equal(await approval.getAttribute('aria-checked'),'false');record(width,'Blog database save forces draft and clears approval',true);await shot('blog-saved');
+   record(width,'Page has no horizontal overflow',await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));
+   for(const type of ['news','blog']){const response=await context.request.get(origin+'/api/v1/'+type);assert.equal(response.status(),200);assert.equal((await response.json()).data.length,0);}record(width,'Saved drafts excluded from local public News and Blog APIs',true);
+   record(width,'No uncaught browser errors',errors.length===0,JSON.stringify(errors));
+   console.log('Blocked external origins', [...blocked]);
+  }catch(error){record(width,'Workflow completion',false,error.message);console.log((await page.locator('body').innerText()).slice(-3000));await shot('failure');}
+  await context.close();
+ }}finally{await browser.close();}if(results.some(r=>r.result==='FAIL'))process.exitCode=1;
+})().catch(error=>{console.error(error);process.exitCode=1;});

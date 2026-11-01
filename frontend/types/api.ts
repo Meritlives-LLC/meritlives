@@ -46,6 +46,8 @@ export interface Service {
 }
 
 export interface NewsItem {
+  featured_image_alt?: string | null;
+  featured_image_disclosure?: string | null;
   id: number;
   title: string;
   slug: string;
@@ -65,6 +67,8 @@ export interface NewsItem {
 }
 
 export interface BlogPost {
+  featured_image_alt?: string | null;
+  featured_image_disclosure?: string | null;
   id: number;
   title: string;
   slug: string;
@@ -82,6 +86,20 @@ export interface BlogPost {
     description?: string | null;
     canonical_url?: string | null;
   };
+}
+
+export interface FeaturedStory {
+  id: string;
+  type: "news" | "blog";
+  title: string;
+  slug: string;
+  excerpt?: string | null;
+  image?: string | null;
+  publishedAt?: string | null;
+  author?: string | null;
+  source?: string | null;
+  category?: Category | null;
+  url: string;
 }
 
 export interface Paginated<T> {

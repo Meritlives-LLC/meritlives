@@ -4,6 +4,25 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import { getBlogCategories, getNewsCategories } from "../lib/queries";
+import type { Category } from "../types/api";
+
+type NavLink = { label: string; href: string; external?: boolean };
+
+const NEWS_CATEGORY_ORDER = [
+  { label: "Technology", slug: "technology" },
+  { label: "Business", slug: "business" },
+  { label: "Insights", slug: "insights" },
+] as const;
+
+const BLOG_CATEGORY_ORDER = [
+  { label: "Company Updates", slug: "company-updates" },
+  { label: "Projects & Operations", slug: "projects-operations" },
+  { label: "Industry Insights & Thought Leadership", slug: "industry-insights-thought-leadership" },
+  { label: "Team & Culture", slug: "team-culture" },
+  { label: "Knowledge Base", slug: "knowledge-base" },
+  { label: "Policies & Procedures", slug: "policies-procedures" },
+] as const;
 
 const nav = [
 
@@ -20,11 +39,11 @@ const nav = [
     label: "Products",
     items: [
       { label: "All Products", href: "/products" },
-      { label: "skillhub", href: "/products/skillhub" },
-      { label: "bookmarketing", href: "/products/bookmarketing" },
-      { label: " waaubot", href: " https://waaubot.meriives.com" },
-      { label: " audioflow", href: "https://audioflow.meritlives.com" },
-      { label: "politcs", href: "/products/politcs" },
+      { label: "SkillHub", href: "https://skillhub.meritlives.com/login", external: true },
+      { label: "BookMarketing", href: "/products/bookmarketing" },
+      { label: "Wauabot", href: "/products/wauabot" },
+      { label: "Audioflow", href: "https://audioflow.meritlives.com/", external: true },
+      { label: "Politcs", href: "/products/politcs" },
     ],
   },
   {
@@ -43,20 +62,11 @@ const nav = [
   },
   {
     label: "News",
-    items: [
-      { label: "Latest News", href: "/news" },
-      { label: "Announcements", href: "/news/announcements" },
-      { label: "Company News", href: "/news/company" },
-    ],
+    items: [],
   },
   {
     label: "Blog",
-    items: [
-      { label: "All Articles", href: "/blog" },
-      { label: "Technology", href: "/blog/technology" },
-      { label: "Business", href: "/blog/business" },
-      { label: "Insights", href: "/blog/insights" },
-    ],
+    items: [],
   },
   {
     label: "Contact",
@@ -71,10 +81,48 @@ const nav = [
 export default function SiteHeader() {
   const [openIndex, setOpenIndex] = useState<number | null>(null);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [newsCategories, setNewsCategories] = useState<NavLink[]>([]);
+  const [blogCategories, setBlogCategories] = useState<NavLink[]>([]);
   const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const navRef = useRef<HTMLDivElement>(null);
   const pathname = usePathname();
   const isHome = pathname === "/";
+
+  useEffect(() => {
+    let active = true;
+
+    void Promise.allSettled([getNewsCategories(), getBlogCategories()]).then(([newsResult, blogResult]) => {
+      if (!active) return;
+
+      if (newsResult.status === "fulfilled") {
+        const available = newsResult.value.data.filter(
+          (category: Category) => category.type === "news" && category.status === "active"
+        );
+        setNewsCategories(NEWS_CATEGORY_ORDER
+          .filter((expected) => available.some((category) => category.slug === expected.slug && category.name === expected.label))
+          .map((category) => ({
+            label: category.label,
+            href: `/news?category=${encodeURIComponent(category.slug)}`,
+          })));
+      }
+
+      if (blogResult.status === "fulfilled") {
+        const available = blogResult.value.data.filter(
+          (category: Category) => category.type === "blog" && category.status === "active"
+        );
+        setBlogCategories(BLOG_CATEGORY_ORDER
+          .filter((expected) => available.some((category) => category.slug === expected.slug && category.name === expected.label))
+          .map((category) => ({
+            label: category.label,
+            href: `/blog?category=${encodeURIComponent(category.slug)}`,
+          })));
+      }
+    });
+
+    return () => {
+      active = false;
+    };
+  }, []);
 
   /* Escape + click-outside close */
   useEffect(() => {
@@ -114,8 +162,18 @@ export default function SiteHeader() {
     closeTimer.current = setTimeout(() => setOpenIndex(null), 140);
   };
 
+  const navItems = nav.map((item) => {
+    if (item.label === "News") {
+      return { ...item, items: [{ label: "All News", href: "/news" }, ...newsCategories] };
+    }
+    if (item.label === "Blog") {
+      return { ...item, items: [{ label: "All Blog Posts", href: "/blog" }, ...blogCategories] };
+    }
+    return item;
+  });
+
   return (
-    <header className="sticky top-0 z-50 border-b border-white/[0.06] bg-[#0D0D0D]">
+    <header className="ml-site-header sticky top-0 z-50 border-b border-[#DDE2ED] bg-white text-black shadow-sm shadow-black/[0.03]">
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-6 lg:h-[68px]">
 
         {/* ── LOGO ── */}
@@ -129,7 +187,7 @@ export default function SiteHeader() {
             className="h-[34px] w-[34px] object-contain"
           />
           <span
-            className="text-[17px] font-semibold tracking-[-0.015em] text-white"
+            className="text-[17px] font-semibold tracking-[-0.015em] text-[#0D0D0D]"
             style={{ fontFamily: 'var(--font-grotesk), "Space Grotesk", sans-serif' }}
           >
             Meritlives
@@ -146,30 +204,41 @@ export default function SiteHeader() {
               onClick={() => setOpenIndex(null)}
               onMouseEnter={() => setOpenIndex(null)}
               className={`rounded-md px-3 py-2 text-[13.5px] font-medium transition-colors ${
-                isHome ? "text-white" : "text-white/60 hover:text-white"
+                isHome ? "text-[#0D0D0D]" : "text-[#4B5260] hover:text-[#0D0D0D]"
               }`}
             >
               Home
             </Link>
 
-            {nav.map((item, i) => {
+            {navItems.map((item, i) => {
               const isOpen = openIndex === i;
               const panelId = `menu-${item.label.toLowerCase()}`;
               return (
                 <div
                   key={item.label}
                   className="relative"
-                  onMouseEnter={() => openMenu(i)}
-                  onMouseLeave={scheduleClose}
+                  onPointerEnter={(event) => {
+                    if (event.pointerType === "mouse") openMenu(i);
+                  }}
+                  onPointerLeave={(event) => {
+                    if (event.pointerType === "mouse") scheduleClose();
+                  }}
+                  onFocusCapture={() => openMenu(i)}
+                  onBlurCapture={(event) => {
+                    const next = event.relatedTarget;
+                    if (next instanceof Node && event.currentTarget.contains(next)) return;
+                    if (closeTimer.current) clearTimeout(closeTimer.current);
+                    setOpenIndex(null);
+                  }}
                 >
                   <button
                     type="button"
                     aria-haspopup="true"
                     aria-expanded={isOpen}
                     aria-controls={panelId}
-                    onClick={() => setOpenIndex(isOpen ? null : i)}
+                    onClick={() => setOpenIndex(i)}
                     className={`flex items-center gap-1 rounded-md px-3 py-2 text-[13.5px] font-medium transition-colors ${
-                      isOpen ? "text-white" : "text-white/60 hover:text-white"
+                      isOpen ? "text-[#0D0D0D]" : "text-[#4B5260] hover:text-[#0D0D0D]"
                     }`}
                   >
                     {item.label}
@@ -194,23 +263,37 @@ export default function SiteHeader() {
                   <div
                     id={panelId}
                     role="menu"
-                    className={`absolute left-1/2 top-full w-60 -translate-x-1/2 pt-2 transition-all duration-150 ${
+                    className={`absolute left-1/2 top-full z-[60] w-72 max-h-[min(70vh,32rem)] -translate-x-1/2 overflow-y-auto pt-2 transition-all duration-150 ${
                       isOpen
                         ? "visible translate-y-0 opacity-100"
                         : "invisible translate-y-1 opacity-0"
                     }`}
                   >
-                    <div className="overflow-hidden rounded-xl border border-white/[0.08] bg-[#141414] p-1.5 shadow-2xl shadow-black/50">
+                    <div className="overflow-hidden rounded-xl border border-[#DDE2ED] bg-white p-1.5 shadow-xl shadow-black/10">
                       {item.items.map((sub) => (
-                        <Link
-                          key={sub.href}
-                          href={sub.href}
-                          role="menuitem"
-                          onClick={() => setOpenIndex(null)}
-                          className="block rounded-lg px-3 py-2 text-[13.5px] text-white/70 transition-colors hover:bg-white/[0.06] hover:text-white"
-                        >
-                          {sub.label}
-                        </Link>
+                        sub.external ? (
+                          <a
+                            key={sub.href}
+                            href={sub.href}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            role="menuitem"
+                            onClick={() => setOpenIndex(null)}
+                            className="block rounded-lg px-3 py-2 text-[13.5px] text-[#4B5260] transition-colors hover:bg-[#F2F4F8] hover:text-[#0D0D0D] focus-visible:bg-[#F2F4F8] focus-visible:outline-2 focus-visible:outline-[#1A3BBF]"
+                          >
+                            {sub.label}<span className="sr-only"> (opens in a new tab)</span>
+                          </a>
+                        ) : (
+                          <Link
+                            key={sub.href}
+                            href={sub.href}
+                            role="menuitem"
+                            onClick={() => setOpenIndex(null)}
+                            className="block rounded-lg px-3 py-2 text-[13.5px] text-[#4B5260] transition-colors hover:bg-[#F2F4F8] hover:text-[#0D0D0D] focus-visible:bg-[#F2F4F8] focus-visible:outline-2 focus-visible:outline-[#1A3BBF]"
+                          >
+                            {sub.label}
+                          </Link>
+                        )
                       ))}
                     </div>
                   </div>
@@ -230,7 +313,7 @@ export default function SiteHeader() {
             aria-label={mobileOpen ? "Close menu" : "Open menu"}
             aria-expanded={mobileOpen}
             onClick={() => setMobileOpen((v) => !v)}
-            className="grid h-9 w-9 place-items-center rounded-md text-white/70 transition-colors hover:text-white lg:hidden"
+            className="grid h-9 w-9 place-items-center rounded-md text-[#4B5260] transition-colors hover:bg-[#F2F4F8] hover:text-[#0D0D0D] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1A3BBF] lg:hidden"
           >
             <svg className="h-5 w-5" viewBox="0 0 20 20" fill="none">
               {mobileOpen ? (
@@ -255,26 +338,26 @@ export default function SiteHeader() {
 
       {/* ── MOBILE MENU ── */}
       {mobileOpen && (
-        <div className="border-t border-white/[0.06] lg:hidden">
+        <div className="border-t border-[#DDE2ED] bg-white lg:hidden">
           <div className="mx-auto max-w-6xl px-6 pb-8 pt-4">
             {/* Home */}
-            <div className="border-b border-white/[0.05]">
+            <div className="border-b border-[#E5E7EB]">
               <Link
                 href="/"
                 aria-current={isHome ? "page" : undefined}
                 onClick={() => setMobileOpen(false)}
                 className={`block py-3.5 text-[15px] font-medium ${
-                  isHome ? "text-white" : "text-white/85"
+                  isHome ? "text-[#0D0D0D]" : "text-[#3A3F52]"
                 }`}
               >
                 Home
               </Link>
             </div>
 
-            {nav.map((item) => (
-              <div key={item.label} className="border-b border-white/[0.05] last:border-0">
+            {navItems.map((item) => (
+              <div key={item.label} className="border-b border-[#E5E7EB] last:border-0">
                 <details className="group">
-                  <summary className="flex cursor-pointer list-none items-center justify-between py-3.5 text-[15px] font-medium text-white/85 [&::-webkit-details-marker]:hidden">
+                  <summary className="flex cursor-pointer list-none items-center justify-between py-3.5 text-[15px] font-medium text-[#3A3F52] transition-colors hover:text-[#0D0D0D] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1A3BBF] [&::-webkit-details-marker]:hidden">
                     {item.label}
                     <svg
                       className="h-3.5 w-3.5 opacity-60 transition-transform group-open:rotate-180"
@@ -292,14 +375,27 @@ export default function SiteHeader() {
                   </summary>
                   <div className="pb-2">
                     {item.items.map((sub) => (
-                      <Link
-                        key={sub.href}
-                        href={sub.href}
-                        onClick={() => setMobileOpen(false)}
-                        className="block rounded-md px-3 py-2.5 text-[14px] text-white/60 transition-colors hover:bg-white/[0.05] hover:text-white"
-                      >
-                        {sub.label}
-                      </Link>
+                      sub.external ? (
+                        <a
+                          key={sub.href}
+                          href={sub.href}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          onClick={() => setMobileOpen(false)}
+                          className="block rounded-md px-3 py-2.5 text-[14px] text-[#4B5260] transition-colors hover:bg-[#F2F4F8] hover:text-[#0D0D0D] focus-visible:bg-[#F2F4F8] focus-visible:outline-2 focus-visible:outline-[#1A3BBF]"
+                        >
+                          {sub.label}<span className="sr-only"> (opens in a new tab)</span>
+                        </a>
+                      ) : (
+                        <Link
+                          key={sub.href}
+                          href={sub.href}
+                          onClick={() => setMobileOpen(false)}
+                          className="block rounded-md px-3 py-2.5 text-[14px] text-[#4B5260] transition-colors hover:bg-[#F2F4F8] hover:text-[#0D0D0D] focus-visible:bg-[#F2F4F8] focus-visible:outline-2 focus-visible:outline-[#1A3BBF]"
+                        >
+                          {sub.label}
+                        </Link>
+                      )
                     ))}
                   </div>
                 </details>

@@ -3,6 +3,7 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\ProductResource\Pages;
+use App\Filament\Resources\Concerns\UsesResourcePermissions;
 use App\Models\Product;
 use Filament\Forms;
 use Filament\Forms\Form;
@@ -12,6 +13,13 @@ use Filament\Tables\Table;
 
 class ProductResource extends Resource
 {
+    use UsesResourcePermissions;
+
+    protected static function permissions(): array
+    {
+        return ['view' => 'view_products', 'create' => 'create_products', 'edit' => 'edit_products', 'delete' => 'delete_products'];
+    }
+
     protected static ?string $model = Product::class;
     protected static ?string $navigationIcon = 'heroicon-o-cube';
     protected static ?string $navigationGroup = 'Content';
@@ -22,9 +30,9 @@ class ProductResource extends Resource
             Forms\Components\TextInput::make('name')->required()->maxLength(255)->live(onBlur: true),
             Forms\Components\TextInput::make('slug')->required()->unique(ignoreRecord: true)->maxLength(255),
             Forms\Components\Textarea::make('short_description')->rows(3)->columnSpanFull(),
-            Forms\Components\RichEditor::make('description')->columnSpanFull(),
-            Forms\Components\FileUpload::make('logo')->image()->directory('products'),
-            Forms\Components\FileUpload::make('cover_image')->image()->directory('products'),
+            Forms\Components\RichEditor::make('description')->fileAttachmentsDisk('public')->fileAttachmentsDirectory('attachments')->saveUploadedFileAttachmentsUsing(fn ($file) => \App\Support\RasterUpload::store($file, 'attachments'))->columnSpanFull(),
+            \App\Support\RasterUpload::field('logo', 'products'),
+            \App\Support\RasterUpload::field('cover_image', 'products'),
             Forms\Components\TextInput::make('website_url')->url(),
             Forms\Components\TextInput::make('cta_text')->default('Learn More'),
             Forms\Components\Select::make('status')

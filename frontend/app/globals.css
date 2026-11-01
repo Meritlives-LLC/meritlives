@@ -100,27 +100,16 @@
 
 html {
   scroll-behavior: smooth;
-  background: var(--ml-bg);
+  background: #fff;
 }
 
 body {
   margin: 0;
   min-height: 100vh;
 
-  background:
-    radial-gradient(
-      circle at 50% -20%,
-      rgba(26, 59, 191, 0.12),
-      transparent 30%
-    ),
-    radial-gradient(
-      circle at 80% 18%,
-      rgba(204, 17, 17, 0.08),
-      transparent 28%
-    ),
-    var(--ml-bg);
+  background: #fff;
 
-  color: var(--ml-ink);
+  color: #0d0d0d;
 
   font-family: var(--font-body);
   font-size: 16px;
@@ -180,7 +169,7 @@ a {
 }
 
 ::-webkit-scrollbar-track {
-  background: var(--ml-bg);
+  background: #fff;
 }
 
 ::-webkit-scrollbar-thumb {
@@ -1359,44 +1348,42 @@ a {
    HEADER
 ========================================================= */
 
-header {
-  color: #ffffff;
+.ml-site-header {
+  color: #000000;
 }
 
-header a,
-header button {
-  color: #ffffff;
+.ml-site-header a,
+.ml-site-header button,
+.ml-site-header summary,
+.ml-site-header [role="menu"] {
+  color: #000000;
 }
 
-header a:hover,
-header button:hover {
-  color: var(--ml-lime);
+.ml-site-header a:hover,
+.ml-site-header button:hover,
+.ml-site-header summary:hover,
+.ml-site-header [role="menu"] a:hover {
+  color: #000000;
 }
 
-header [role="menu"] {
-  color: #ffffff;
+.ml-site-header [role="menu"] a {
+  color: #000000;
 }
 
-header [role="menu"] a {
-  color: rgba(255, 255, 255, 0.78);
+.ml-site-header [role="menu"] a:hover,
+.ml-site-header [role="menu"] a:focus-visible {
+  color: #000000;
+  background: #f2f4f8;
 }
 
-header [role="menu"] a:hover {
-  color: #ffffff;
-
-  background: rgba(255, 255, 255, 0.07);
+.ml-site-header details a {
+  color: #000000;
 }
 
-header details summary {
-  color: #ffffff;
-}
-
-header details a {
-  color: rgba(255, 255, 255, 0.72);
-}
-
-header details a:hover {
-  color: #ffffff;
+.ml-site-header details a:hover,
+.ml-site-header details a:focus-visible {
+  color: #000000;
+  background: #f2f4f8;
 }
 
 
@@ -1409,7 +1396,7 @@ header details a:hover {
 
   overflow: hidden;
 
-  padding-block: 90px 32px;
+  padding-block: 0;
 
   border-top: 1px solid var(--ml-border);
 
@@ -1713,10 +1700,6 @@ header details a:hover {
     font-size: clamp(2.6rem, 13vw, 4rem);
   }
 
-  .ml-footer {
-    padding-block: 65px 25px;
-  }
-
   .ml-image-frame::after {
     inset: 8px;
   }
@@ -1770,6 +1753,142 @@ header details a:hover {
   a {
     text-decoration: underline;
   }
+}
+
+/* Public route surfaces use a light palette. The footer remains outside this
+   wrapper and keeps its existing dark theme. */
+.ml-public-content {
+  color: #0d0d0d;
+  background: #fff;
+}
+
+.ml-public-content main {
+  color: #0d0d0d;
+  background-color: #fff;
+}
+
+.ml-public-content main :is(
+  [class~="bg-[#080909]"],
+  [class~="bg-[#0B0F17]"],
+  [class~="bg-[#0D0D0D]"],
+  [class~="bg-[#0d0e0e]"],
+  [class~="bg-[#101827]"],
+  [class~="bg-[#111212]"],
+  [class~="bg-[#121313]"],
+  [class~="bg-[#141414]"],
+  [class~="bg-[#151616]"],
+  [class~="bg-[#181919]"],
+  [class~="bg-gray-50"],
+  [class~="bg-slate-50"],
+  .ml-dark-bg,
+  .ml-editorial-bg,
+  .ml-grid-bg,
+  .ml-hero-bg,
+  .ml-card,
+  .ml-card-soft,
+  .ml-card-blue,
+  .ml-product-card,
+  .ml-team-card
+  ):not(section[aria-labelledby="meritlives-watch-title"] *) {
+  color: #0d0d0d;
+  background-color: #fff;
+  background-image: none;
+  border-color: #dde2ed;
+}
+
+.ml-public-content main [class*="text-white"]:not(section[aria-labelledby="meritlives-watch-title"] *),
+.ml-public-content main [class~="text-[#F2F4F8]"]:not(section[aria-labelledby="meritlives-watch-title"] *) {
+  color: #0d0d0d !important;
+}
+
+.ml-public-content main [class*="text-white/"]:not(section[aria-labelledby="meritlives-watch-title"] *) {
+  color: #596273 !important;
+}
+
+.ml-public-content main [class*="border-white/"]:not(section[aria-labelledby="meritlives-watch-title"] *) {
+  border-color: #dde2ed !important;
+}
+
+.ml-public-content main [class*="decoration-white/"]:not(section[aria-labelledby="meritlives-watch-title"] *) {
+  text-decoration-color: #8892a4 !important;
+}
+
+.ml-public-content main [class~="bg-black"][class*="text-white"] {
+  color: #fff !important;
+}
+
+.ml-public-content main [class~="bg-[#1A3BBF]"] [class*="text-white"] {
+  color: #fff !important;
+}
+
+.ml-public-content main .ml-hero-bg:not(section[aria-labelledby="meritlives-watch-title"] *) {
+  background: #fff !important;
+  color: #0d0d0d !important;
+}
+
+.ml-public-content main .ml-hero-bg:not(section[aria-labelledby="meritlives-watch-title"] *) :is(h1, h2, h3, h4, p, strong, a) {
+  color: #0d0d0d !important;
+}
+
+.ml-public-content main :is(.ml-modal-panel, .ml-input, .ml-textarea, .ml-select, .ml-cta, .ml-card, .ml-card-soft, .ml-card-blue, .ml-image-frame, .ml-tag, .ml-marquee):not(section[aria-labelledby="meritlives-watch-title"] *) {
+  color: #0d0d0d;
+  background-color: #fff;
+  border-color: #dde2ed;
+}
+
+.ml-public-content main .ml-btn-ghost:not(section[aria-labelledby="meritlives-watch-title"] *) {
+  color: #0d0d0d;
+  border-color: #8892a4;
+}
+
+.ml-public-content main :is(.ml-body-lg, .ml-text-muted, .ml-text-muted-light, .ml-tag):not(section[aria-labelledby="meritlives-watch-title"] *) {
+  color: #596273;
+}
+
+.ml-public-content main [class*="text-[#c8ff00]"]:not(section[aria-labelledby="meritlives-watch-title"] *) {
+  color: #a20d0d !important;
+}
+
+.ml-public-content main [class*="text-[#8fb0ff]"]:not(section[aria-labelledby="meritlives-watch-title"] *) {
+  color: #1a3bbf !important;
+}
+
+.ml-public-content main [class*="text-[#E8ECF7]"]:not(section[aria-labelledby="meritlives-watch-title"] *),
+.ml-public-content main [class*="text-[#999b96]"]:not(section[aria-labelledby="meritlives-watch-title"] *) {
+  color: #596273 !important;
+}
+
+.ml-public-content main .ml-hero-bg:not(section[aria-labelledby="meritlives-watch-title"] *)::before,
+.ml-public-content main .ml-dark-bg:not(section[aria-labelledby="meritlives-watch-title"] *)::before {
+  background-image:
+    linear-gradient(rgba(13, 13, 13, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(13, 13, 13, 0.035) 1px, transparent 1px);
+}
+
+.ml-public-content main .ml-grid-bg:not(section[aria-labelledby="meritlives-watch-title"] *)::after {
+  background: none;
+}
+
+.ml-public-content main .ml-eyebrow:not(section[aria-labelledby="meritlives-watch-title"] *)::before {
+  box-shadow: 0 0 0 4px rgba(204, 17, 17, 0.08);
+}
+
+.ml-public-content main input:not(section[aria-labelledby="meritlives-watch-title"] *),
+.ml-public-content main textarea:not(section[aria-labelledby="meritlives-watch-title"] *),
+.ml-public-content main select:not(section[aria-labelledby="meritlives-watch-title"] *) {
+  color: #0d0d0d;
+}
+
+.ml-public-content main input:not(section[aria-labelledby="meritlives-watch-title"] *)::placeholder,
+.ml-public-content main textarea:not(section[aria-labelledby="meritlives-watch-title"] *)::placeholder {
+  color: #687080;
+}
+
+.ml-site-header a:focus-visible,
+.ml-site-header button:focus-visible,
+.ml-site-header summary:focus-visible {
+  outline: 2px solid #1a3bbf;
+  outline-offset: 3px;
 }
 /* =========================================================
    HERO CONTRAST FIX

@@ -3,6 +3,7 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\NewsResource\Pages;
+use App\Filament\Resources\Concerns\UsesResourcePermissions;
 use App\Models\News;
 use App\Models\Category;
 use Filament\Forms;
@@ -13,6 +14,13 @@ use Filament\Tables\Table;
 
 class NewsResource extends Resource
 {
+    use UsesResourcePermissions;
+
+    protected static function permissions(): array
+    {
+        return ['view' => 'view_news', 'create' => 'create_news', 'edit' => 'edit_news', 'delete' => 'delete_news'];
+    }
+
     protected static ?string $model = News::class;
     protected static ?string $navigationIcon = 'heroicon-o-newspaper';
     protected static ?string $navigationGroup = 'Content';
@@ -26,7 +34,8 @@ class NewsResource extends Resource
                 ->label('Editorial Category')
                 ->options(function (?News $record): array {
                     $approved = Category::query()
-                        ->whereIn('name', ['Technology', 'Business', 'Digital Innovation'])
+                        ->where('type', 'news')->where('status', 'active')
+                        ->whereIn('name', ['Technology', 'Business', 'Insights'])
                         ->orderBy('name')
                         ->pluck('name', 'id')
                         ->all();
@@ -42,17 +51,13 @@ class NewsResource extends Resource
                 })
                 ->searchable(),
             Forms\Components\Textarea::make('excerpt')->rows(4)->columnSpanFull(),
-            Forms\Components\RichEditor::make('content')->columnSpanFull(),
+            Forms\Components\TextInput::make('seo_title')->maxLength(70),
+            Forms\Components\TextInput::make('seo_description')->maxLength(170)->columnSpanFull(),
+            Forms\Components\RichEditor::make('content')->fileAttachmentsDisk('public')->fileAttachmentsDirectory('attachments')->saveUploadedFileAttachmentsUsing(fn ($file) => \App\Support\RasterUpload::store($file, 'attachments'))->columnSpanFull(),
             Forms\Components\TextInput::make('author_name')->maxLength(255),
             Forms\Components\TextInput::make('source_name')->required(),
-            Forms\Components\TextInput::make('source_url')->url()->required(),
-            Forms\Components\FileUpload::make('featured_image')
-                ->label('Featured Image')
-                ->image()
-                ->maxSize(5120)
-                ->disk('public')
-                ->visibility('public')
-                ->directory('news'),
+            Forms\Components\TextInput::make('source_url')->url()->required()->unique(ignoreRecord: true),
+            \App\Support\RasterUpload::field('featured_image', 'news-images')->label('Featured Image'),
             Forms\Components\TextInput::make('image_url')->url(),
             Forms\Components\DateTimePicker::make('published_at'),
             Forms\Components\TextInput::make('external_id'),
@@ -76,7 +81,7 @@ class NewsResource extends Resource
             Tables\Filters\SelectFilter::make('status')->options([
                 'pending'=>'Pending','published'=>'Published','archived'=>'Archived',
             ]),
-            Tables\Filters\SelectFilter::make('category_id')->relationship('category','name'),
+            Tables\Filters\SelectFilter::make('category_id')->relationship('category','name', modifyQueryUsing: fn ($query) => $query->where('type', 'news')->whereIn('name', ['Technology', 'Business', 'Insights'])),
         ])->actions([
             Tables\Actions\EditAction::make(),
         ])->bulkActions([

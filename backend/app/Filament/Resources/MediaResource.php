@@ -3,6 +3,7 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\MediaResource\Pages;
+use App\Filament\Resources\Concerns\UsesResourcePermissions;
 use App\Models\Media;
 use Filament\Forms;
 use Filament\Forms\Form;
@@ -12,6 +13,13 @@ use Filament\Tables\Table;
 
 class MediaResource extends Resource
 {
+    use UsesResourcePermissions;
+
+    protected static function permissions(): array
+    {
+        return ['view' => 'manage_media', 'create' => 'manage_media', 'edit' => 'manage_media', 'delete' => 'manage_media'];
+    }
+
     protected static ?string $model = Media::class;
     protected static ?string $navigationIcon = 'heroicon-o-photo';
     protected static ?string $navigationGroup = 'Media';
@@ -20,8 +28,12 @@ class MediaResource extends Resource
     {
         return $form->schema([
             Forms\Components\TextInput::make('name')->required(),
-            Forms\Components\FileUpload::make('path')->disk('public')->directory('general')->required(),
+            \App\Support\RasterUpload::field('path', 'general')->required(),
             Forms\Components\TextInput::make('alt_text'),
+            Forms\Components\Placeholder::make('ai_provenance')->label('Image provenance')->content(fn (?Media $record) =>
+                ($record?->metadata['ai_generated'] ?? false)
+                    ? ($record->metadata['disclosure'].' Style: '.$record->metadata['style'].'. Aspect ratio: '.$record->metadata['aspect_ratio'].'. Provider: '.$record->metadata['provider'])
+                    : 'No AI-generation metadata.'),
         ]);
     }
 

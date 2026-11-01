@@ -48,13 +48,20 @@ class WatchVideo extends Model
     {
         return $query
             ->where('status', self::STATUS_ACTIVE)
+            ->whereNotNull('published_at')
+            ->where('published_at', '<=', now())
             ->whereRaw('LENGTH(youtube_video_id) = 11')
             ->whereNotNull('thumbnail_url')
             ->where('thumbnail_url', 'like', 'https://%')
             ->where(function (Builder $query) {
-                $query->where('video_url', 'like', 'https://youtube.com/watch?v=%')
-                    ->orWhere('video_url', 'like', 'https://www.youtube.com/watch?v=%')
-                    ->orWhere('video_url', 'like', 'https://youtu.be/%');
+                $query->where(function (Builder $query) {
+                    $query->where('video_url', 'like', 'https://youtube.com/watch?v=%')
+                        ->orWhere('video_url', 'like', 'https://www.youtube.com/watch?v=%');
+                })->whereRaw("substr(video_url, instr(video_url, 'v=') + 2, 11) = youtube_video_id")
+                    ->orWhere(function (Builder $query) {
+                        $query->where('video_url', 'like', 'https://youtu.be/%')
+                            ->whereRaw("substr(video_url, instr(video_url, 'youtu.be/') + 9, 11) = youtube_video_id");
+                    });
             });
     }
 }

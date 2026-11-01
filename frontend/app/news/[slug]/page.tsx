@@ -1,7 +1,10 @@
+import EditorialNewsletterSection from "../../../components/EditorialNewsletterSection";
 import type { Metadata } from "next";
+import Link from "next/link";
 import { notFound } from "next/navigation";
-import { getNewsItem } from "../../../lib/queries";
+import { getNews, getNewsItem } from "../../../lib/queries";
 import NewsShareButtons from "../../../components/NewsShareButtons";
+import type { NewsItem } from "../../../types/api";
 import {
   formatNewsDate,
   getExternalNewsSource,
@@ -9,7 +12,7 @@ import {
   getValidModifiedTime,
 } from "../../../lib/news-presentation";
 
-type NewsPageProps = { params: { slug: string } };
+type NewsPageProps = { params: Promise<{ slug: string }> };
 
 function getSiteUrl() {
   return process.env.NEXT_PUBLIC_SITE_URL;
@@ -39,7 +42,21 @@ async function loadNewsItem(slug: string) {
   }
 }
 
-export async function generateMetadata({ params }: NewsPageProps): Promise<Metadata> {
+async function loadRelatedNews(item: NewsItem): Promise<NewsItem[]> {
+  if (!item.category?.id) return [];
+
+  try {
+    const result = await getNews("?per_page=12");
+    return result.data
+      .filter((story) => story.id !== item.id && story.category?.id === item.category?.id)
+      .slice(0, 3);
+  } catch {
+    return [];
+  }
+}
+
+export async function generateMetadata({ params: paramsPromise }: NewsPageProps): Promise<Metadata> {
+  const params = await paramsPromise;
   const item = await loadNewsItem(params.slug);
   const canonical = getCanonicalUrl(item.slug);
   const image = getAbsoluteImageUrl(item.featured_image || item.image_url);
@@ -64,8 +81,10 @@ export async function generateMetadata({ params }: NewsPageProps): Promise<Metad
   };
 }
 
-export default async function NewsDetailPage({ params }: NewsPageProps) {
+export default async function NewsDetailPage({ params: paramsPromise }: NewsPageProps) {
+  const params = await paramsPromise;
   const item = await loadNewsItem(params.slug);
+  const relatedStories = await loadRelatedNews(item);
   const canonical = getCanonicalUrl(item.slug);
   const image = getAbsoluteImageUrl(item.featured_image || item.image_url);
   const publishedDate = formatNewsDate(item.published_at);
@@ -139,7 +158,8 @@ export default async function NewsDetailPage({ params }: NewsPageProps) {
         {image && (
           <figure className="mt-8">
             {/* Keep the API-provided image URL; do not substitute a logo or placeholder. */}
-            <img src={image} alt={item.title} className="h-auto w-full" />
+            <img src={image} alt={item.featured_image_alt || item.title} className="h-auto w-full" />
+            {item.featured_image_disclosure && <figcaption className="mt-2 text-sm text-[#596273]">{item.featured_image_disclosure}</figcaption>}
           </figure>
         )}
 
@@ -157,6 +177,37 @@ export default async function NewsDetailPage({ params }: NewsPageProps) {
           }}
         />
       </article>
-    </main>
+
+      {relatedStories.length > 0 && (
+        <section aria-labelledby="related-news-title" className="mt-12 border-t border-[#DDE2ED] pt-8">
+          <div className="mb-6 flex items-end justify-between gap-4">
+            <div>
+              <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#CC1111]">More from {categoryName || "News"}</p>
+              <h2 id="related-news-title" className="mt-2 text-2xl font-semibold tracking-tight text-[#0D0D0D]">Related stories</h2>
+            </div>
+            <Link href="/news" className="shrink-0 text-sm font-medium text-[#1A3BBF] underline underline-offset-4">All news</Link>
+          </div>
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {relatedStories.map((story) => (
+              <article key={story.id}>
+                <Link href={`/news/${story.slug}`} className="group block focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#1A3BBF]">
+                  {(story.featured_image || story.image_url) ? (
+                    <img src={story.featured_image || story.image_url || ""} alt={story.featured_image_alt || ""} loading="lazy" className="aspect-[16/10] w-full rounded-lg bg-[#F2F4F8] object-cover" />
+                  ) : (
+                    <div aria-hidden="true" className="aspect-[16/10] w-full rounded-lg bg-[#F2F4F8]" />
+                  )}
+                  <div className="mt-3 flex items-center justify-between gap-2 text-xs">
+                    <span className="truncate font-semibold uppercase tracking-[0.1em] text-[#CC1111]">{getNewsCategoryLabel(story) || "News"}</span>
+                    <time className="shrink-0 text-[#687080]" dateTime={story.published_at || undefined}>{formatNewsDate(story.published_at)}</time>
+                  </div>
+                  <h3 className="mt-2 line-clamp-2 text-lg font-semibold leading-snug text-[#0D0D0D] transition-colors group-hover:text-[#1A3BBF]">{story.title}</h3>
+                </Link>
+              </article>
+            ))}
+          </div>
+        </section>
+      )}
+    <EditorialNewsletterSection />
+      </main>
   );
 }

@@ -3,6 +3,7 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\ServiceResource\Pages;
+use App\Filament\Resources\Concerns\UsesResourcePermissions;
 use App\Models\Service;
 use Filament\Forms;
 use Filament\Forms\Form;
@@ -12,6 +13,13 @@ use Filament\Tables\Table;
 
 class ServiceResource extends Resource
 {
+    use UsesResourcePermissions;
+
+    protected static function permissions(): array
+    {
+        return ['view' => 'view_services', 'create' => 'create_services', 'edit' => 'edit_services', 'delete' => 'delete_services'];
+    }
+
     protected static ?string $model = Service::class;
     protected static ?string $navigationIcon = 'heroicon-o-wrench-screwdriver';
     protected static ?string $navigationGroup = 'Content';
@@ -22,7 +30,7 @@ class ServiceResource extends Resource
             Forms\Components\TextInput::make('name')->required(),
             Forms\Components\TextInput::make('slug')->required()->unique(ignoreRecord: true),
             Forms\Components\Textarea::make('short_description')->rows(3)->columnSpanFull(),
-            Forms\Components\RichEditor::make('description')->columnSpanFull(),
+            Forms\Components\RichEditor::make('description')->fileAttachmentsDisk('public')->fileAttachmentsDirectory('attachments')->saveUploadedFileAttachmentsUsing(fn ($file) => \App\Support\RasterUpload::store($file, 'attachments'))->columnSpanFull(),
             Forms\Components\TextInput::make('icon'),
             Forms\Components\Select::make('status')->options(['draft'=>'Draft','published'=>'Published'])->required(),
             Forms\Components\Toggle::make('featured'),

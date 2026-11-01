@@ -11,29 +11,34 @@ class NewsController extends Controller
 {
     public function index(Request $request)
     {
+        $pageSize = \App\Support\PublicPagination::size($request);
         $news = News::query()
-            ->with('category')
-            ->where('status', 'published')
+            ->with(['category' => fn ($query) => $query->where('type', 'news')->whereIn('name', ['Technology', 'Business', 'Insights'])])
+            ->publiclyEligible()
             ->when($request->filled('category'), function ($query) use ($request) {
                 $query->whereHas('category', fn ($category) =>
-                    $category->where('slug', $request->string('category')->toString())
+                    $category->where('type', 'news')->where('status', 'active')
+                        ->whereIn('name', ['Technology', 'Business', 'Insights'])
+                        ->where('slug', $request->string('category')->toString())
                 );
             })
             ->when($request->boolean('featured'), fn ($query) => $query->where('featured', true))
             ->latest('published_at')
-            ->paginate($request->integer('per_page', 12));
+            ->paginate($pageSize);
 
+        \App\Support\EditorialImageMetadata::attach($news->getCollection());
         return NewsResource::collection($news);
     }
 
     public function show(string $slug)
     {
         $news = News::query()
-            ->with('category')
-            ->where('status', 'published')
+            ->with(['category' => fn ($query) => $query->where('type', 'news')->whereIn('name', ['Technology', 'Business', 'Insights'])])
+            ->publiclyEligible()
             ->where('slug', $slug)
             ->firstOrFail();
 
+        \App\Support\EditorialImageMetadata::attach([$news]);
         return new NewsResource($news);
     }
 }

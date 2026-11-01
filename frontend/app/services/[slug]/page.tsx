@@ -1,14 +1,45 @@
 import { notFound } from "next/navigation";
 import { getService } from "../../../lib/queries";
+import WebDevelopmentPage from "../../../components/WebDevelopmentPage";
+import FintechServicePage from "../../../components/FintechServicePage";
+import EdTechServicePage from "../../../components/EdTechServicePage";
+import EducationServicePage from "../../../components/EducationServicePage";
+import BusinessAutomationServicePage from "../../../components/BusinessAutomationServicePage";
+import RealEstateServicePage from "../../../components/RealEstateServicePage";
 
 export default async function ServicePage({
-  params,
+  params: paramsPromise,
 }: {
-  params: { slug: string };
+  params: Promise<{ slug: string }>;
 }) {
+  const params = await paramsPromise;
+  if (params.slug.toLowerCase() === "fintech") {
+    return <FintechServicePage />;
+  }
+
+  if (params.slug.toLowerCase() === "edtech") {
+    return <EdTechServicePage />;
+  }
+
+  if (params.slug.toLowerCase() === "education") {
+    return <EducationServicePage />;
+  }
+
+  if (params.slug.toLowerCase() === "business-automation") {
+    return <BusinessAutomationServicePage />;
+  }
+
+  if (params.slug.toLowerCase() === "real-estate") {
+    return <RealEstateServicePage />;
+  }
+
   try {
     const result = await getService(params.slug);
     const service = result.data;
+
+    if (params.slug === "web-development") {
+      return <WebDevelopmentPage service={service} />;
+    }
 
     return (
       <main className="mx-auto max-w-5xl px-6 py-16">

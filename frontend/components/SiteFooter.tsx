@@ -142,9 +142,9 @@ export default function SiteFooter() {
           MAIN FOOTER
       ====================================================== */}
 
-      <div className="ml-container py-16 lg:py-24">
+      <div className="ml-container py-12 sm:py-14 lg:py-16">
 
-        <div className="grid gap-16 lg:grid-cols-[1fr_2.7fr] lg:gap-20">
+        <div className="grid gap-10 lg:grid-cols-[minmax(220px,0.9fr)_minmax(0,2.8fr)] lg:gap-10 xl:gap-16">
 
           {/* =================================================
               BRAND
@@ -170,14 +170,14 @@ export default function SiteFooter() {
               </span>
             </Link>
 
-            <p className="mt-6 max-w-xs text-sm leading-7 text-white/50">
+            <p className="mt-5 max-w-xs text-sm leading-7 text-white/50">
               Technology, digital innovation and practical solutions designed
               to create meaningful impact across Africa.
             </p>
 
             <Link
               href="/contact"
-              className="ml-btn ml-btn-lime mt-7"
+              className="ml-btn ml-btn-lime mt-5"
             >
               Talk to us
 
@@ -185,7 +185,7 @@ export default function SiteFooter() {
             </Link>
 
             {/* Socials */}
-            <div className="mt-10">
+            <div className="mt-7">
 
               <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-white/35">
                 Follow Meritlives
@@ -222,23 +222,23 @@ export default function SiteFooter() {
               LINK COLUMNS
           ================================================== */}
 
-          <div className="grid grid-cols-2 gap-x-8 gap-y-12 sm:grid-cols-4">
+          <div className="grid grid-cols-2 gap-x-6 gap-y-8 md:grid-cols-[0.8fr_0.9fr_1.5fr_0.8fr] md:gap-x-6 xl:gap-x-8">
 
             {footerColumns.map((column) => (
               <div key={column.title}>
 
-                <h2 className="font-mono text-[10px] font-medium uppercase tracking-[0.16em] text-white/35">
+                <h2 className="text-base font-semibold uppercase tracking-[0.08em] text-white lg:text-[17px]">
                   {column.title}
                 </h2>
 
-                <ul className="mt-5 space-y-3">
+                <ul className="mt-4 space-y-2.5">
 
                   {column.links.map(([label, href]) => (
                     <li key={`${label}-${href}`}>
 
                       <Link
                         href={href}
-                        className="group inline-flex text-[13px] leading-5 text-white/55 transition-colors duration-200 hover:text-white"
+                        className="group inline-flex py-0.5 text-[13px] leading-5 text-white/55 transition-colors duration-200 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white"
                       >
                         <span>{label}</span>
                       </Link>
@@ -256,94 +256,7 @@ export default function SiteFooter() {
         </div>
 
 
-        {/* ===================================================
-            CONTACT STRIP
-        ==================================================== */}
-
-        <div className="mt-20 border-y border-white/[0.08] py-8">
-
-          <div className="flex flex-col gap-7 lg:flex-row lg:items-center lg:justify-between">
-
-            <div>
-
-              <p className="font-[var(--font-heading)] text-lg font-medium text-white">
-                Have a project in mind?
-              </p>
-
-              <p className="mt-1 text-sm text-white/45">
-                Let&apos;s discuss how Meritlives can help.
-              </p>
-
-            </div>
-
-
-            <div className="flex flex-wrap items-center gap-x-7 gap-y-3">
-
-              <a
-                href="mailto:hello@meritlives.com"
-                className="text-sm font-medium text-white/60 transition-colors hover:text-[#c8ff00]"
-              >
-                sales@meritlives.com
-              </a>
-
-              <span
-                aria-hidden="true"
-                className="hidden h-1 w-1 rounded-full bg-white/20 sm:block"
-              />
-
-              <a
-                href="tel:+2340000000000"
-                className="text-sm font-medium text-white/60 transition-colors hover:text-[#c8ff00]"
-              >
-                +234 000 000 0000
-              </a>
-
-              <span
-                aria-hidden="true"
-                className="hidden h-1 w-1 rounded-full bg-white/20 sm:block"
-              />
-
-              <span className="text-sm text-white/40">
-                Abuja, Nigeria
-              </span>
-
-            </div>
-
-          </div>
-
-        </div>
-
-
-        {/* ===================================================
-            SOCIAL / BUSINESS BAR
-        ==================================================== */}
-
-        <div className="flex flex-col gap-6 pt-8 md:flex-row md:items-center md:justify-between">
-
-          <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
-
-            <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-white/30">
-              Technology
-            </span>
-
-            <span className="h-1 w-1 rounded-full bg-[#c8ff00]/60" />
-
-            <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-white/30">
-              Innovation
-            </span>
-
-            <span className="h-1 w-1 rounded-full bg-[#c8ff00]/60" />
-
-            <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-white/30">
-              Impact
-            </span>
-
-          </div>
-
-        </div>
-
       </div>
-
 
       {/* =====================================================
           COPYRIGHT
@@ -351,7 +264,7 @@ export default function SiteFooter() {
 
       <div className="border-t border-white/[0.08]">
 
-        <div className="ml-container flex flex-col gap-4 py-6 text-[11px] text-white/30 sm:flex-row sm:items-center sm:justify-between">
+        <div className="ml-container flex flex-col gap-3 py-5 text-xs text-white/50 sm:flex-row sm:items-center sm:justify-between">
 
           <span>
             © {new Date().getFullYear()} Meritlives LLC. All rights reserved.

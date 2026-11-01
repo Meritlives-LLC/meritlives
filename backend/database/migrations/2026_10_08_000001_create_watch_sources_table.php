@@ -13,7 +13,7 @@ return new class extends Migration
             $table->string('name');
             $table->string('platform', 32)->default('youtube');
             $table->string('platform_channel_id', 64);
-            $table->string('category', 64);
+            $table->string('category', 50);
             $table->text('description')->nullable();
             $table->boolean('is_active')->default(false);
             $table->unsignedTinyInteger('priority')->default(2);

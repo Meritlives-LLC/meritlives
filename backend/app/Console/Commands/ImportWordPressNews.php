@@ -38,6 +38,8 @@ class ImportWordPressNews extends Command
 
     private const IMAGE_DIR = 'news-images';
 
+    private const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
+
     public function handle(): int
     {
         $dryRun = (bool) $this->option('dry-run');
@@ -47,9 +49,8 @@ class ImportWordPressNews extends Command
         try {
             $wp = DB::connection('wordpress');
             $wp->getPdo();
-        } catch (\Throwable $e) {
+        } catch (\Throwable) {
             $this->error('Could not connect to the WordPress database. Check WP_DB_* in your .env.');
-            $this->error($e->getMessage());
 
             return self::FAILURE;
         }
@@ -76,8 +77,8 @@ class ImportWordPressNews extends Command
             $this->info('Images will be downloaded and re-hosted locally (use --no-images to skip).');
         }
 
-        $siteUrl = rtrim(env('WP_SITE_URL', 'https://meritlives.com'), '/');
-        $defaultSourceName = env('WP_IMPORT_SOURCE_NAME', 'MERITLIVES');
+        $siteUrl = rtrim((string) config('wordpress_import.site_url', 'https://meritlives.com'), '/');
+        $defaultSourceName = config('wordpress_import.source_name', 'MERITLIVES');
 
         $bar = $this->output->createProgressBar($posts->count());
         $bar->start();
@@ -108,7 +109,7 @@ class ImportWordPressNews extends Command
                 $approvedCategorySlugs = [
                     Str::slug('Technology'),
                     Str::slug('Business'),
-                    Str::slug('Digital Innovation'),
+                    Str::slug('Insights'),
                 ];
 
                 if (in_array(Str::slug($categoryName), $approvedCategorySlugs, true)) {
@@ -198,10 +199,7 @@ class ImportWordPressNews extends Command
         $this->info("Done. Created: {$created}, Updated: {$updated}, Skipped: {$skipped}.");
 
         if ($imageFailures) {
-            $this->warn(count($imageFailures).' image(s) failed to download and were left pointing at the original WordPress URL:');
-            foreach (array_unique($imageFailures) as $url) {
-                $this->line("  - {$url}");
-            }
+            $this->warn(count(array_unique($imageFailures)).' image(s) failed to download and were left pointing at their original URLs. URL details were omitted.');
             $this->warn('Re-run the command later to retry these, or fix them manually in /admin before taking WordPress offline.');
         }
 
@@ -215,31 +213,145 @@ class ImportWordPressNews extends Command
      */
     private function downloadImage(?string $url): ?string
     {
-        if (! $url) {
+        if (! $url || ! $this->isAllowedImageUrl($url)) {
             return null;
         }
 
-        $extension = pathinfo(parse_url($url, PHP_URL_PATH) ?? '', PATHINFO_EXTENSION) ?: 'jpg';
-        $filename = Str::slug(pathinfo(parse_url($url, PHP_URL_PATH) ?? '', PATHINFO_FILENAME)).'-'.substr(md5($url), 0, 10).'.'.$extension;
-        $path = self::IMAGE_DIR.'/'.$filename;
-
-        if (Storage::disk('public')->exists($path)) {
-            return Storage::disk('public')->url($path);
-        }
-
         try {
-            $response = Http::timeout(30)->retry(2, 500)->get($url);
+            $currentUrl = $url;
+            $response = null;
 
-            if (! $response->successful()) {
+            for ($redirect = 0; $redirect <= 3; $redirect++) {
+                if (! $this->isAllowedImageUrl($currentUrl)) {
+                    return null;
+                }
+
+                $response = Http::timeout(30)
+                    ->withOptions(['allow_redirects' => false, 'stream' => true])
+                    ->get($currentUrl);
+
+                if (! in_array($response->status(), [301, 302, 303, 307, 308], true)) {
+                    break;
+                }
+
+                $location = $response->header('Location');
+                if (! is_string($location) || trim($location) === '' || $redirect === 3) {
+                    return null;
+                }
+
+                $currentUrl = $this->resolveRedirectUrl($currentUrl, $location);
+                if ($currentUrl === null) {
+                    return null;
+                }
+            }
+
+            if (! $response || ! $response->successful()) {
                 return null;
             }
 
-            Storage::disk('public')->put($path, $response->body());
+            $contentLength = $response->header('Content-Length');
+            if (is_string($contentLength) && ctype_digit($contentLength) && (int) $contentLength > self::MAX_IMAGE_BYTES) {
+                return null;
+            }
+
+            $stream = $response->toPsrResponse()->getBody();
+            $body = '';
+            try {
+                while (! $stream->eof()) {
+                    $chunk = $stream->read(8192);
+                    if ($chunk === '') {
+                        break;
+                    }
+                    $body .= $chunk;
+                    if (strlen($body) > self::MAX_IMAGE_BYTES) {
+                        return null;
+                    }
+                }
+            } finally {
+                $stream->close();
+            }
+
+            $imageInfo = @getimagesizefromstring($body);
+            $mime = is_array($imageInfo) ? ($imageInfo['mime'] ?? '') : '';
+            $extensions = ['image/jpeg' => 'jpg', 'image/png' => 'png', 'image/gif' => 'gif', 'image/webp' => 'webp'];
+            if (! isset($extensions[$mime])) {
+                return null;
+            }
+
+            $imagePath = parse_url($currentUrl, PHP_URL_PATH) ?: '';
+            $filename = Str::slug(pathinfo($imagePath, PATHINFO_FILENAME)).'-'.substr(md5($url), 0, 10).'.'.$extensions[$mime];
+            $path = self::IMAGE_DIR.'/'.$filename;
+            if (Storage::disk('public')->exists($path)) {
+                return Storage::disk('public')->url($path);
+            }
+
+            if (! Storage::disk('public')->put($path, $body)) {
+                return null;
+            }
 
             return Storage::disk('public')->url($path);
         } catch (\Throwable) {
             return null;
         }
+    }
+
+    private function isAllowedImageUrl(string $url): bool
+    {
+        $parts = parse_url($url);
+        if (! is_array($parts)
+            || strtolower($parts['scheme'] ?? '') !== 'https'
+            || isset($parts['user'])
+            || isset($parts['pass'])
+            || (isset($parts['port']) && $parts['port'] !== 443)) {
+            return false;
+        }
+
+        $host = strtolower(rtrim($parts['host'] ?? '', '.'));
+        $normalizedHost = trim($host, '[]');
+        if ($normalizedHost === 'localhost'
+            || str_ends_with($normalizedHost, '.localhost')
+            || str_ends_with($normalizedHost, '.local')
+            || str_ends_with($normalizedHost, '.internal')) {
+            return false;
+        }
+
+        if (filter_var($normalizedHost, FILTER_VALIDATE_IP) !== false
+            && filter_var($normalizedHost, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE) === false) {
+            return false;
+        }
+
+        $configuredHosts = config('wordpress_import.image_allowed_hosts', []);
+        $allowedHosts = is_array($configuredHosts)
+            ? array_map(static fn ($configuredHost): string => strtolower(trim((string) $configuredHost)), $configuredHosts)
+            : [];
+
+        return $host !== '' && in_array($host, $allowedHosts, true);
+    }
+
+    private function resolveRedirectUrl(string $currentUrl, string $location): ?string
+    {
+        if (filter_var($location, FILTER_VALIDATE_URL) !== false) {
+            return $location;
+        }
+
+        $base = parse_url($currentUrl);
+        if (! is_array($base) || empty($base['host'])) {
+            return null;
+        }
+
+        if (str_starts_with($location, '//')) {
+            return 'https:'.$location;
+        }
+
+        $origin = 'https://'.$base['host'].(isset($base['port']) ? ':'.$base['port'] : '');
+        if (str_starts_with($location, '/')) {
+            return $origin.$location;
+        }
+
+        $path = (string) ($base['path'] ?? '/');
+        $directory = substr($path, 0, (int) strrpos($path, '/') + 1);
+
+        return $origin.$directory.$location;
     }
 
     /**

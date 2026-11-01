@@ -18,7 +18,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
     <html lang="en">
       <body className={`${inter.variable} ${spaceGrotesk.variable}`}>
         <SiteHeader />
-        {children}
+        <div className="ml-public-content">{children}</div>
         <SiteFooter />
       </body>
     </html>

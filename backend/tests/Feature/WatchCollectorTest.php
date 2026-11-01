@@ -32,6 +32,7 @@ class WatchCollectorTest extends TestCase
         $video = WatchVideo::firstOrFail();
         $this->assertSame('https://www.youtube.com/watch?v=dQw4w9WgXcQ', $video->video_url);
         $this->assertFalse($video->is_featured);
+        $this->assertSame(WatchVideo::STATUS_INACTIVE, $video->status);
         $this->assertSame(11, strlen($video->youtube_video_id));
     }
 
@@ -111,7 +112,7 @@ class WatchCollectorTest extends TestCase
         ]);
     }
 
-    private function responseFor(Request $request): \Illuminate\Http\Client\Response
+    private function responseFor(Request $request): \GuzzleHttp\Promise\PromiseInterface
     {
         $path = parse_url($request->url(), PHP_URL_PATH);
         return match (basename((string) $path)) {
