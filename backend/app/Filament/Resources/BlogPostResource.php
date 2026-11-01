@@ -78,9 +78,8 @@ class BlogPostResource extends Resource
             foreach (['status', 'published_at', 'is_public_approved', 'featured'] as $field) {
                 unset($data[$field]);
             }
-            if ($creating) {
-                $data += ['status' => 'draft', 'is_public_approved' => false, 'published_at' => null, 'featured' => false];
-            }
+            // An author editing previously approved copy must submit it for review again.
+            $data += ['status' => 'draft', 'is_public_approved' => false, 'published_at' => null, 'featured' => false];
         }
         return $data;
     }

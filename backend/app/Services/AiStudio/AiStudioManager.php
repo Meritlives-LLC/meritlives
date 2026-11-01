@@ -7,6 +7,7 @@ use App\Models\AiGenerationJob;
 use App\Models\AiPromptTemplate;
 use App\Models\BlogPost;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Storage;
@@ -45,6 +46,21 @@ class AiStudioManager
     public function generate(AiGenerationJob $job, int $actorId): AiGenerationJob
     {
         $this->authorize($actorId, 'create_ai_generations');
+        $lock = Cache::lock('ai-studio-generation:'.$job->id, max(60, (int) config('ai_studio.timeout_seconds', 45) + 30));
+        if (! $lock->get()) {
+            throw new AiStudioException('This job is already generating. Wait for it to finish.');
+        }
+        try {
+            // Other requests may have completed since the caller loaded this model.
+            $job->refresh();
+            return $this->generatePreview($job, $actorId);
+        } finally {
+            $lock->release();
+        }
+    }
+
+    private function generatePreview(AiGenerationJob $job, int $actorId): AiGenerationJob
+    {
         if (! config('ai_studio.enabled') || config('ai_studio.provider', 'none') === 'none') {
             throw new AiStudioException('AI generation is unavailable. It is disabled or no provider is configured.');
         }

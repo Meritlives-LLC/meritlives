@@ -22,7 +22,7 @@ class SyncRssNewsModerationTest extends TestCase
     public function test_dry_run_does_not_write_news_or_categories(): void
     {
         $categoryCount = Category::query()->count();
-        Http::fake(['techcrunch.com/*' => Http::response(self::FEED)]);
+        Http::fake(['techcrunch.com/*' => fn () => Http::response(self::FEED)]);
 
         $this->artisan('news:sync-rss --dry-run')->assertExitCode(0);
 
@@ -32,7 +32,7 @@ class SyncRssNewsModerationTest extends TestCase
 
     public function test_new_rss_stories_are_pending_and_existing_review_status_is_preserved(): void
     {
-        Http::fake(['techcrunch.com/*' => Http::response(self::FEED)]);
+        Http::fake(['techcrunch.com/*' => fn () => Http::response(self::FEED)]);
 
         $this->artisan('news:sync-rss')->assertExitCode(0);
 
@@ -54,7 +54,7 @@ class SyncRssNewsModerationTest extends TestCase
             'source_url' => 'https://techcrunch.com/story', 'external_id' => 'https://techcrunch.com/story',
             'status' => 'published', 'published_at' => now(),
         ]);
-        Http::fake(['techcrunch.com/*' => Http::response(self::FEED)]);
+        Http::fake(['techcrunch.com/*' => fn () => Http::response(self::FEED)]);
 
         $this->artisan('news:sync-rss')->assertExitCode(0);
 

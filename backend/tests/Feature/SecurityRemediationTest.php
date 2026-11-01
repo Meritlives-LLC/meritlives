@@ -67,7 +67,8 @@ class SecurityRemediationTest extends TestCase
             $this->assertFalse(BlogPostResource::$action($other));
         }
         $data = ['title' => 'Author copy', 'user_id' => 8, 'status' => 'published', 'published_at' => now(), 'featured' => true, 'is_public_approved' => true];
-        $this->assertSame(['title' => 'Author copy'], BlogPostResource::authoringData($data));
+        $this->assertSame(['title' => 'Author copy', 'status' => 'draft', 'is_public_approved' => false,
+            'published_at' => null, 'featured' => false], BlogPostResource::authoringData($data));
         $create = BlogPostResource::authoringData($data, true);
         $this->assertSame(7, $create['user_id']);
         $this->assertSame('draft', $create['status']);

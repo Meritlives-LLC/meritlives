@@ -11,7 +11,7 @@ class ResponsesEditorialProvider implements EditorialProvider
     public function suggest(array $input, array $categories): array
     {
         if (! config('ai_studio.api_key') || ! config('ai_editorial.model')) {
-            throw new RuntimeException('AI is not configured. Contact an administrator.');
+            throw new EditorialProviderException('AI is not configured. Contact an administrator.');
         }
         $properties = [];
         foreach (['title', 'body', 'excerpt', 'seo_title', 'seo_description', 'slug'] as $field) {
@@ -33,21 +33,21 @@ class ResponsesEditorialProvider implements EditorialProvider
                 ]);
             try {
                 if ($response->status() === 429) {
-                    throw new RuntimeException('AI quota or rate limit reached. Check credits or try again later; your article is unchanged.');
+                    throw new EditorialProviderException('AI quota or rate limit reached. Check credits or try again later; your article is unchanged.');
                 }
                 if (! $response->successful()) {
-                    throw new RuntimeException('AI is temporarily unavailable; your article is unchanged.');
+                    throw new EditorialProviderException('AI is temporarily unavailable; your article is unchanged.');
                 }
                 $stream = $response->toPsrResponse()->getBody();
                 $bytes = '';
                 while (! $stream->eof()) {
                     $chunk = $stream->read(8192);
                     if ($chunk === '' && ! $stream->eof()) {
-                        throw new RuntimeException('AI returned an unreadable response.');
+                        throw new EditorialProviderException('AI returned an unreadable response.');
                     }
                     $bytes .= $chunk;
                     if (strlen($bytes) > 100000) {
-                        throw new RuntimeException('AI response exceeded the size limit.');
+                        throw new EditorialProviderException('AI response exceeded the size limit.');
                     }
                 }
                 $payload = json_decode($bytes, true, 32, JSON_THROW_ON_ERROR);
@@ -55,13 +55,13 @@ class ResponsesEditorialProvider implements EditorialProvider
                 $response->close();
             }
             if (($payload['status'] ?? '') !== 'completed') {
-                throw new RuntimeException('AI could not complete the suggestion. Try a shorter request.');
+                throw new EditorialProviderException('AI could not complete the suggestion. Try a shorter request.');
             }
             $text = '';
             foreach ($payload['output'] ?? [] as $item) {
                 foreach ($item['content'] ?? [] as $part) {
                     if (($part['type'] ?? '') === 'refusal') {
-                        throw new RuntimeException('AI declined this request.');
+                        throw new EditorialProviderException('AI declined this request.');
                     }
                     if (($part['type'] ?? '') === 'output_text') {
                         $text .= $part['text'];
@@ -70,15 +70,11 @@ class ResponsesEditorialProvider implements EditorialProvider
             }
             $result = json_decode($text, true, 32, JSON_THROW_ON_ERROR);
             if (! is_array($result)) {
-                throw new RuntimeException('AI returned invalid suggestions.');
+                throw new EditorialProviderException('AI returned invalid suggestions.');
             }
             return $result;
-        } catch (RuntimeException $e) {
-            // Only our own safe messages may leave this boundary.
-            if (get_class($e) === RuntimeException::class) {
-                throw $e;
-            }
-            throw new RuntimeException('AI request failed; your article is unchanged.');
+        } catch (EditorialProviderException $e) {
+            throw $e;
         } catch (Throwable) {
             throw new RuntimeException('AI request failed; your article is unchanged.');
         }

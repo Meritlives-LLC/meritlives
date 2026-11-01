@@ -21,6 +21,7 @@ class AiStudioImagePreviewController
         $disk = Storage::disk('local');
         abort_unless($disk->exists($job->preview_path), 404);
 
+        abort_unless($disk->size($job->preview_path) <= (int) config('ai_studio.image_max_bytes'), 404);
         $bytes = $disk->get($job->preview_path);
         abort_unless(is_string($bytes) && strlen($bytes) <= (int) config('ai_studio.image_max_bytes'), 404);
         $info = @getimagesizefromstring($bytes);

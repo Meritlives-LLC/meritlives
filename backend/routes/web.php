@@ -9,7 +9,7 @@ Route::get('/', function () {
 });
 
 Route::get('/admin/ai-studio/jobs/{job}/preview', AiStudioImagePreviewController::class)
-    ->middleware(['auth', 'throttle:60,1'])
+    ->middleware([\Filament\Http\Middleware\SetUpPanel::class.':admin', \Filament\Http\Middleware\Authenticate::class, 'throttle:60,1'])
     ->name('ai-studio.preview');
 
 Route::get('/admin/feature-images/{job}/preview', FeatureImagePreviewController::class)

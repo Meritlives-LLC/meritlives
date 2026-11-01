@@ -12,6 +12,8 @@ use Illuminate\Support\Str;
 
 class SyncRssNews extends Command
 {
+    private const MAX_FEED_BYTES = 1_500_000;
+
     /**
      * php artisan news:sync-rss
      * php artisan news:sync-rss --dry-run
@@ -59,23 +61,7 @@ class SyncRssNews extends Command
             $this->info("Fetching {$feed['url']} ...");
 
             try {
-                $response = Http::timeout(20)->get($feed['url']);
-            } catch (\Throwable $e) {
-                $this->error("Could not reach {$feed['url']}: {$e->getMessage()}");
-                $failed++;
-
-                continue;
-            }
-
-            if (! $response->successful()) {
-                $this->error("{$feed['url']} returned HTTP {$response->status()}");
-                $failed++;
-
-                continue;
-            }
-
-            try {
-                $xml = app(RssFeedParser::class)->parse($response->body());
+                $xml = $this->fetchFeed($feed['url']);
             } catch (\Throwable) {
                 $this->error("Could not safely parse RSS from {$feed['url']}");
                 $failed++;
@@ -183,5 +169,33 @@ class SyncRssNews extends Command
         }
 
         return null;
+    }
+
+    private function fetchFeed(string $url): \SimpleXMLElement
+    {
+        // Fixed feed URLs must not redirect to arbitrary hosts or buffer an unbounded body.
+        $response = Http::connectTimeout(5)->timeout(20)
+            ->withOptions(['allow_redirects' => false, 'stream' => true])
+            ->get($url);
+        try {
+            if (! $response->successful()) {
+                throw new \RuntimeException('Feed request failed.');
+            }
+            $length = $response->header('Content-Length');
+            if (is_string($length) && ctype_digit($length) && (int) $length > self::MAX_FEED_BYTES) {
+                throw new \RuntimeException('Feed is too large.');
+            }
+            $stream = $response->toPsrResponse()->getBody();
+            $body = '';
+            while (! $stream->eof()) {
+                $chunk = $stream->read(min(8192, self::MAX_FEED_BYTES + 1 - strlen($body)));
+                if (($chunk === '' && ! $stream->eof()) || strlen($body .= $chunk) > self::MAX_FEED_BYTES) {
+                    throw new \RuntimeException('Feed is too large or unreadable.');
+                }
+            }
+            return app(RssFeedParser::class)->parse($body);
+        } finally {
+            $response->close();
+        }
     }
 }
