@@ -34,6 +34,7 @@ const nextConfig = {
   },
   images: {
     dangerouslyAllowSVG: false,
+    qualities: [75],
     remotePatterns: [
       { protocol: "https", hostname: "i.ytimg.com", port: "", pathname: "/vi/**", search: "" },
       { protocol: "https", hostname: "img.youtube.com", port: "", pathname: "/vi/**", search: "" },

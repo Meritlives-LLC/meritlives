@@ -26,6 +26,16 @@ class FeatureImageService
     public function generate(string $type, array $input, ?int $recordId = null): AiGenerationJob
     {
         $this->authorize($type, $recordId);
+        try {
+            return app(\App\Support\AiRequestGuard::class)->run((int) auth()->id(),
+                fn () => $this->generateImage($type, $input, $recordId));
+        } catch (\App\Support\AiRequestLimitException $e) {
+            throw new ImageException($e->getMessage(), 'quota');
+        }
+    }
+
+    private function generateImage(string $type, array $input, ?int $recordId): AiGenerationJob
+    {
         if (! \Illuminate\Support\Facades\Schema::hasColumn('media', 'metadata')) throw new ImageException('Apply the approved Media metadata migration before enabling image generation.', 'configuration');
         $input = Validator::make($input, [
             'method' => ['required', Rule::in(['article','custom'])], 'title' => 'required_if:method,article|nullable|string|max:255',

@@ -39,6 +39,13 @@ class EditorialAssistant
     {
         $this->authorize($type, $id);
         abort_unless(config('ai_editorial.enabled'), 503, 'AI editorial assistance is disabled.');
+        return app(\App\Support\AiRequestGuard::class)->run((int) auth()->id(),
+            fn () => $this->generateSuggestions($type, $input, $id));
+    }
+
+    private function generateSuggestions(string $type, array $input, ?int $id): array
+    {
+        abort_unless(config('ai_editorial.enabled'), 503, 'AI editorial assistance is disabled.');
         abort_if(strlen(json_encode($input, JSON_THROW_ON_ERROR)) > 140000, 413, 'Editorial request is too large.');
         $input = Validator::make($input, [
             'topic' => 'required|string|max:250',

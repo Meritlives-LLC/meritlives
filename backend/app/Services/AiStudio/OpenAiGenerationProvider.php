@@ -22,8 +22,8 @@ class OpenAiGenerationProvider implements AiGenerationProvider
         try {
             $response = Http::acceptJson()
                 ->withToken($apiKey)
-                ->connectTimeout(max(1, (int) config('ai_studio.connect_timeout_seconds', 5)))
-                ->timeout(max(1, (int) config('ai_studio.timeout_seconds', 45)))
+                ->connectTimeout(max(1, min(10, (int) config('ai_studio.connect_timeout_seconds', 5))))
+                ->timeout(max(1, min(60, (int) config('ai_studio.timeout_seconds', 45))))
                 ->withOptions(['stream' => true])
                 ->post(self::ENDPOINT, [
                     'model' => $model,

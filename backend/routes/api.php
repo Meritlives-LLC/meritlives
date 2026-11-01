@@ -14,7 +14,7 @@ use Illuminate\Support\Facades\Route;
 // Merged from phase1 (base), phase3 (full route set) and phase7 (named
 // rate limiters + hardening). See docs/MERGE-NOTES.md.
 
-Route::prefix('v1')->group(function () {
+Route::prefix('v1')->middleware('throttle:public-api')->group(function () {
     Route::get('/pages/about', \App\Http\Controllers\Api\V1\AboutPageController::class)->middleware('throttle:public-read')->name('api.pages.about');
     Route::get('/health', function () {
         return response()->json([

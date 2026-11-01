@@ -27,6 +27,7 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
 
         $middleware->append(SecurityHeaders::class);
+        $middleware->prepend(\App\Http\Middleware\RequestSizeLimit::class);
         $middleware->api(append: [
             ForceJson::class,
         ]);

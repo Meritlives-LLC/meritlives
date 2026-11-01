@@ -33,6 +33,8 @@ class AiStudioManager
             throw new AiStudioException('The selected prompt template is unavailable.');
         }
 
+        try { app(\App\Support\AiRequestGuard::class)->createJob($actorId); }
+        catch (\App\Support\AiRequestLimitException $e) { throw new AiStudioException($e->getMessage()); }
         return DB::transaction(fn () => AiGenerationJob::create([
             'type' => $validated['type'],
             'status' => AiGenerationJob::STATUS_DRAFT,
@@ -46,6 +48,13 @@ class AiStudioManager
     public function generate(AiGenerationJob $job, int $actorId): AiGenerationJob
     {
         $this->authorize($actorId, 'create_ai_generations');
+        try {
+            return app(\App\Support\AiRequestGuard::class)->run($actorId, fn () => $this->generateForUser($job, $actorId));
+        } catch (\App\Support\AiRequestLimitException $e) { throw new AiStudioException($e->getMessage()); }
+    }
+
+    private function generateForUser(AiGenerationJob $job, int $actorId): AiGenerationJob
+    {
         $lock = Cache::lock('ai-studio-generation:'.$job->id, max(60, (int) config('ai_studio.timeout_seconds', 45) + 30));
         if (! $lock->get()) {
             throw new AiStudioException('This job is already generating. Wait for it to finish.');

@@ -21,8 +21,8 @@ class ResponsesEditorialProvider implements EditorialProvider
         $properties['verification_checklist'] = ['type' => 'array', 'items' => ['type' => 'string']];
         try {
             $response = Http::acceptJson()->withToken(config('ai_studio.api_key'))
-                ->connectTimeout(config('ai_studio.connect_timeout_seconds', 5))
-                ->timeout(config('ai_studio.timeout_seconds', 45))->withOptions(['stream' => true])
+                ->connectTimeout(max(1, min(10, (int) config('ai_studio.connect_timeout_seconds', 5))))
+                ->timeout(max(1, min(60, (int) config('ai_studio.timeout_seconds', 45))))->withOptions(['stream' => true])
                 ->post('https://api.openai.com/v1/responses', [
                     'model' => config('ai_editorial.model'), 'store' => false,
                     'max_output_tokens' => 4000,

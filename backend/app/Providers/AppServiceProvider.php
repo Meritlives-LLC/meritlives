@@ -40,15 +40,37 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        RateLimiter::for('public-api', fn (Request $request) => Limit::perMinute(config('traffic.api_per_minute', 180))->by($request->ip()));
+        RateLimiter::for('livewire-update', fn (Request $request) => [
+            Limit::perMinute(config('traffic.livewire_ip_per_minute', 300))->by('ip:'.$request->ip()),
+            Limit::perMinute(config('traffic.livewire_per_minute', 120))->by('actor:'.($request->user()?->id ?? $request->ip())),
+        ]);
+        RateLimiter::for('admin-uploads', fn (Request $request) => [
+            Limit::perMinute(60)->by('ip:'.$request->ip()),
+            Limit::perMinute(30)->by('user:'.$request->user()?->id),
+        ]);
+        \Livewire\Livewire::setUpdateRoute(fn ($handle) => \Illuminate\Support\Facades\Route::post('/livewire/update', $handle)
+            ->middleware(['web', 'throttle:livewire-update']));
+        config([
+            'livewire.temporary_file_upload.disk' => 'local',
+            'livewire.temporary_file_upload.middleware' => [
+                \Filament\Http\Middleware\SetUpPanel::class.':admin',
+                \Filament\Http\Middleware\Authenticate::class,
+                'throttle:admin-uploads',
+            ],
+            'livewire.temporary_file_upload.rules' => ['required', 'file', 'image', 'mimes:jpg,jpeg,png,webp,gif', 'max:5120'],
+        ]);
         RateLimiter::for('public-read', fn (Request $request) => Limit::perMinute(120)->by($request->ip()));
         RateLimiter::for('public-search', fn (Request $request) => Limit::perMinute(30)->by($request->ip()));
 
         RateLimiter::for('contact', function (Request $request) {
-            return Limit::perMinute(5)->by($request->ip());
+            return [Limit::perMinute(5)->by('minute:'.$request->ip()),
+                Limit::perHour(config('traffic.contact_per_hour', 30))->by('hour:'.$request->ip())];
         });
 
         RateLimiter::for('newsletter', function (Request $request) {
-            return Limit::perMinute(10)->by($request->ip());
+            return [Limit::perMinute(10)->by('minute:'.$request->ip()),
+                Limit::perHour(config('traffic.newsletter_per_hour', 60))->by('hour:'.$request->ip())];
         });
     }
 }

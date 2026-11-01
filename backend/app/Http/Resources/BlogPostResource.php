@@ -20,7 +20,7 @@ class BlogPostResource extends JsonResource
             'title' => $this->title,
             'slug' => $this->slug,
             'excerpt' => $this->excerpt,
-            'content' => $this->when($request->routeIs('*.show'), HtmlContent::sanitize($this->content)),
+            'content' => $this->when($request->routeIs('*.show'), fn () => HtmlContent::sanitize($this->content)),
             'featured_image' => $this->featured_image
                 ? (Str::startsWith($this->featured_image, ['http://', 'https://'])
                     ? $this->featured_image
