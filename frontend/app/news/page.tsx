@@ -1,17 +1,11 @@
 import NewsList from "../../components/NewsList";
 import ApiError from "../../components/ApiError";
-import { getNews } from "../../lib/queries";
+import { getNews, getNewsCategories } from "../../lib/queries";
 
 export const metadata = {
   title: "News | MERITLIVES LLC",
   description: "MERITLIVES news and updates.",
 };
-
-const NEWS_FILTERS = {
-  technology: "Technology",
-  business: "Business",
-  insights: "Insights",
-} as const;
 
 export default async function NewsPage({
   searchParams: searchParamsPromise,
@@ -20,10 +14,13 @@ export default async function NewsPage({
 }) {
   const searchParams = await searchParamsPromise;
   try {
-    const categorySlug = searchParams.category && searchParams.category in NEWS_FILTERS
-      ? searchParams.category as keyof typeof NEWS_FILTERS
-      : null;
-    const result = await getNews(`?page=1&per_page=6${categorySlug ? `&category=${categorySlug}` : ""}`);
+    const categoriesResult = await getNewsCategories().catch(() => null);
+    const categories = categoriesResult
+      ? categoriesResult.data.filter(category => category.type === "news" && category.status === "active")
+      : [];
+    const selectedCategory = categories.find(category => category.slug === searchParams.category);
+    const categorySlug = selectedCategory?.slug;
+    const result = await getNews(`?page=1&per_page=6${categorySlug ? `&category=${encodeURIComponent(categorySlug)}` : ""}`);
     return (
       <main className="min-h-screen bg-white text-[#0D0D0D]">
         <header className="relative overflow-hidden border-b border-[#DDE2ED] bg-white">
@@ -40,7 +37,7 @@ export default async function NewsPage({
           </div>
         </header>
         <div className="mx-auto max-w-7xl px-5 py-9 sm:px-8 sm:py-12 lg:px-10 lg:py-16">
-          <NewsList key={categorySlug ?? "all-news"} initialPage={result} initialCategory={categorySlug ? NEWS_FILTERS[categorySlug] : "All News"} />
+          <NewsList key={categorySlug ?? "all-news"} initialPage={result} initialCategory={categorySlug ?? ""} categories={categories} />
         </div>
       </main>
     );

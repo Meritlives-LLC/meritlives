@@ -16,9 +16,9 @@ const original = queries.getServices;
 afterEach(() => { cleanup(); queries.getServices = original; });
 const service = (slug, status = 'published') => ({ id: 1, slug, status, name: slug, short_description: 'Approved fixture copy' });
 
-test('eight curated links survive absent CMS records and use existing distinct featured photos', () => {
+test('seven curated links survive absent CMS records and use existing distinct featured photos', () => {
   const document = new JSDOM(renderToStaticMarkup(React.createElement(List, { services: [] }))).window.document;
-  assert.equal(featuredServices.length, 4); assert.equal(otherServices.length, 4);
+  assert.equal(featuredServices.length, 4); assert.equal(otherServices.length, 3);
   assert.equal(new Set(featuredServices.map(s => s.image)).size, 4);
   for (const item of [...featuredServices, ...otherServices]) {
     assert.equal(document.querySelectorAll(`a[href="${item.href}"]`).length, 1);
@@ -28,16 +28,16 @@ test('eight curated links survive absent CMS records and use existing distinct f
 });
 
 test('CMS filtering excludes drafts and curated or repeated slugs across pages and case variants', () => {
-  const first = additionalPublishedServices([service('security'), service('EdTech'), service('draft', 'draft'), service(''), service('extra'), service('EXTRA')]);
+  const first = additionalPublishedServices([service('security'), service('ongoing-maintenance'), service('EdTech'), service('draft', 'draft'), service(''), service('extra'), service('EXTRA')]);
   assert.deepEqual(first.map(s => s.slug), ['extra']);
   assert.deepEqual(additionalPublishedServices([service('extra'), service('another')], first).map(s => s.slug), ['extra', 'another']);
 });
 
-test('API failure retains all eight core links and the established contact destination', async () => {
+test('API failure retains all seven core links and the established contact destination', async () => {
   queries.getServices = async query => { assert.equal(query, '?per_page=50&page=1'); throw Error('Fixture outage'); };
   const Page = require('../app/services/page.tsx').default;
   const document = new JSDOM(renderToStaticMarkup(await Page())).window.document;
-  assert.equal(document.querySelectorAll('[data-service]').length, 8);
+  assert.equal(document.querySelectorAll('[data-service]').length, 7);
   assert.ok(document.querySelector('a[href="/contact"]'));
   assert.ok(document.body.textContent.includes('Additional services are temporarily unavailable'));
 });

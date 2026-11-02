@@ -13,6 +13,12 @@ export default async function ServicePage({
   params: Promise<{ slug: string }>;
 }) {
   const params = await paramsPromise;
+  if (params.slug.toLowerCase() === "web-development") {
+    // The existing page remains available even when its optional CMS copy is unavailable.
+    const result = await getService("web-development").catch(() => null);
+    return <WebDevelopmentPage service={result?.data} />;
+  }
+
   if (params.slug.toLowerCase() === "fintech") {
     return <FintechServicePage />;
   }
@@ -36,10 +42,6 @@ export default async function ServicePage({
   try {
     const result = await getService(params.slug);
     const service = result.data;
-
-    if (params.slug === "web-development") {
-      return <WebDevelopmentPage service={service} />;
-    }
 
     return (
       <main className="mx-auto max-w-5xl px-6 py-16">

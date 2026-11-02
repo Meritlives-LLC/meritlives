@@ -5,14 +5,13 @@ import EditorialNewsletterSection from "./EditorialNewsletterSection";
 import { useRef, useState } from "react";
 import { getNews } from "../lib/queries";
 import { formatNewsDate, getNewsCategoryLabel } from "../lib/news-presentation";
-import type { NewsItem, Paginated } from "../types/api";
+import type { Category, NewsItem, Paginated } from "../types/api";
 
-const categories = ["Technology", "Business", "Insights"] as const;
-type CategoryFilter = "All News" | (typeof categories)[number];
+type CategoryFilter = string;
 const PAGE_SIZE = 6;
 
 function categorySlug(category: CategoryFilter) {
-  return category === "All News" ? "" : `&category=${encodeURIComponent(category.toLowerCase())}`;
+  return !category ? "" : `&category=${encodeURIComponent(category)}`;
 }
 
 function NewsCard({ story }: { story: NewsItem }) {
@@ -74,10 +73,12 @@ function NewsCard({ story }: { story: NewsItem }) {
 
 export default function NewsList({
   initialPage,
-  initialCategory = "All News",
+  initialCategory = "",
+  categories = [],
 }: {
   initialPage: Paginated<NewsItem>;
   initialCategory?: CategoryFilter;
+  categories?: Pick<Category, "name" | "slug">[];
 }) {
   const [activeCategory, setActiveCategory] = useState<CategoryFilter>(initialCategory);
   const [items, setItems] = useState(initialPage.data);
@@ -139,18 +140,18 @@ export default function NewsList({
     <div>
       <nav aria-label="Filter News by category" className="mb-9 border-y border-[#DDE2ED] sm:mb-12">
         <div className="flex min-w-0 gap-2 overflow-x-auto py-3 [scrollbar-width:thin]">
-          {(["All News", ...categories] as const).map((category) => {
-            const active = activeCategory === category;
+          {[{ name: "All News", slug: "" }, ...categories].map((category) => {
+            const active = activeCategory === category.slug;
             return (
               <button
-                key={category}
+                key={category.slug}
                 type="button"
                 aria-pressed={active}
                 disabled={loading}
-                onClick={() => selectCategory(category)}
+                onClick={() => selectCategory(category.slug)}
                 className={`shrink-0 border-b-2 px-3 py-2 text-sm font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1A3BBF] disabled:cursor-wait ${active ? "border-[#CC1111] text-[#CC1111]" : "border-transparent text-[#3A3F52] hover:border-[#CC1111]/50 hover:text-[#0D0D0D]"}`}
               >
-                {category}
+                {category.name}
               </button>
             );
           })}
@@ -163,7 +164,7 @@ export default function NewsList({
         </div>
       ) : (
         <p role="status" className="border-y border-[#DDE2ED] py-10 text-[#3A3F52]">
-          {loading ? "Loading news…" : `No stories in ${activeCategory} yet.`}
+          {loading ? "Loading news…" : `No stories in ${categories.find(category => category.slug === activeCategory)?.name ?? "All News"} yet.`}
         </p>
       )}
 

@@ -13,12 +13,11 @@ class NewsController extends Controller
     {
         $pageSize = \App\Support\PublicPagination::size($request);
         $news = News::query()
-            ->with(['category' => fn ($query) => $query->where('type', 'news')->whereIn('name', ['Technology', 'Business', 'Insights'])])
+            ->with(['category' => fn ($query) => $query->where('type', 'news')->where('status', 'active')])
             ->publiclyEligible()
             ->when($request->filled('category'), function ($query) use ($request) {
                 $query->whereHas('category', fn ($category) =>
                     $category->where('type', 'news')->where('status', 'active')
-                        ->whereIn('name', ['Technology', 'Business', 'Insights'])
                         ->where('slug', $request->string('category')->toString())
                 );
             })
@@ -33,7 +32,7 @@ class NewsController extends Controller
     public function show(string $slug)
     {
         $news = News::query()
-            ->with(['category' => fn ($query) => $query->where('type', 'news')->whereIn('name', ['Technology', 'Business', 'Insights'])])
+            ->with(['category' => fn ($query) => $query->where('type', 'news')->where('status', 'active')])
             ->publiclyEligible()
             ->where('slug', $slug)
             ->firstOrFail();

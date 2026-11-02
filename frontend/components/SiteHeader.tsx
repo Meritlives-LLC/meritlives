@@ -9,12 +9,6 @@ import type { Category } from "../types/api";
 
 type NavLink = { label: string; href: string; external?: boolean };
 
-const NEWS_CATEGORY_ORDER = [
-  { label: "Technology", slug: "technology" },
-  { label: "Business", slug: "business" },
-  { label: "Insights", slug: "insights" },
-] as const;
-
 const BLOG_CATEGORY_ORDER = [
   { label: "Company Updates", slug: "company-updates" },
   { label: "Projects & Operations", slug: "projects-operations" },
@@ -57,7 +51,6 @@ const nav = [
       { label: "Real Estate Technology", href: "/services/real-estate" },
       { label: "Business Automation & Messaging Tools", href: "/services/business-automation" },
       { label: "Security Audits & Hardening", href: "/services/security" },
-      { label: "Ongoing Maintenance & Feature Development", href: "/services/ongoing-maintenance" },
     ],
   },
   {
@@ -87,24 +80,13 @@ export default function SiteHeader() {
   const navRef = useRef<HTMLDivElement>(null);
   const pathname = usePathname();
   const isHome = pathname === "/";
+  const newsMenuOpen = openIndex === nav.findIndex(item => item.label === "News");
 
   useEffect(() => {
     let active = true;
 
-    void Promise.allSettled([getNewsCategories(), getBlogCategories()]).then(([newsResult, blogResult]) => {
+    void Promise.allSettled([getBlogCategories()]).then(([blogResult]) => {
       if (!active) return;
-
-      if (newsResult.status === "fulfilled") {
-        const available = newsResult.value.data.filter(
-          (category: Category) => category.type === "news" && category.status === "active"
-        );
-        setNewsCategories(NEWS_CATEGORY_ORDER
-          .filter((expected) => available.some((category) => category.slug === expected.slug && category.name === expected.label))
-          .map((category) => ({
-            label: category.label,
-            href: `/news?category=${encodeURIComponent(category.slug)}`,
-          })));
-      }
 
       if (blogResult.status === "fulfilled") {
         const available = blogResult.value.data.filter(
@@ -123,6 +105,23 @@ export default function SiteHeader() {
       active = false;
     };
   }, []);
+
+  // Refresh on menu access so CMS additions appear during an existing browsing session.
+  useEffect(() => {
+    let active = true;
+    void getNewsCategories().then((result) => {
+      if (!active) return;
+      const seen = new Set<string>();
+      setNewsCategories(result.data
+        .filter((category) => {
+          if (category.type !== "news" || category.status !== "active" || !category.slug || seen.has(category.slug)) return false;
+          seen.add(category.slug);
+          return true;
+        })
+        .map((category) => ({ label: category.name, href: `/news?category=${encodeURIComponent(category.slug)}` })));
+    }).catch(() => { /* Retain the last available categories during a temporary API failure. */ });
+    return () => { active = false; };
+  }, [newsMenuOpen, mobileOpen]);
 
   /* Escape + click-outside close */
   useEffect(() => {

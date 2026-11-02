@@ -1,10 +1,8 @@
 import type { NewsItem } from "../types/api";
 
-const APPROVED_NEWS_CATEGORIES = ["Technology", "Business", "Insights"];
-
 export function getNewsCategoryLabel(story: Pick<NewsItem, "category">): string | undefined {
   const name = story.category?.name;
-  return name && APPROVED_NEWS_CATEGORIES.includes(name) ? name : undefined;
+  return name || undefined;
 }
 
 function normalizedName(value: string) {

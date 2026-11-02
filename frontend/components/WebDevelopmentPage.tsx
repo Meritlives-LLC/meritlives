@@ -7,7 +7,7 @@ import FormFieldError from "./FormFieldError";
 import type { Service } from "../types/api";
 import modal from "./WebDevelopmentEnquiryModal.module.css";
 
-type Props = { service: Service };
+type Props = { service?: Service };
 
 const offerings = [
   { number: "01", title: "Business websites", description: "Clear, responsive websites that help customers understand your offer and take the next step." },
@@ -181,7 +181,7 @@ export default function WebDevelopmentPage({ service }: Props) {
             <p className="inline-flex items-center gap-3 text-xs font-bold uppercase tracking-[.17em] text-[#b9151b]"><span className="h-[2px] w-8 bg-[#d71920]" />Web development / Digital products</p>
             <h1 className="mt-6 font-[var(--font-heading)] text-5xl font-semibold leading-[1.02] tracking-[-.055em] text-[#111827] sm:text-6xl lg:text-[4.35rem]">We Build Digital Experiences That Move Businesses Forward.</h1>
             <p className="mt-6 max-w-xl text-base leading-8 text-[#4b5563] sm:text-lg">We design and develop websites, applications and online platforms around the people who use them and the goals your business is working toward.</p>
-            {service.short_description && <p className="mt-3 max-w-xl text-sm leading-7 text-[#667085]">{service.short_description}</p>}
+            {service?.short_description && <p className="mt-3 max-w-xl text-sm leading-7 text-[#667085]">{service.short_description}</p>}
             <div className="mt-8 flex flex-wrap items-center gap-3">
               <button type="button" onClick={openModal} className="inline-flex min-h-12 items-center gap-3 rounded-md bg-[#d71920] px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-[#b9151b] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#d71920]">Start a Project <span aria-hidden="true">↗</span></button>
               <a href="#featured-projects" className="inline-flex min-h-12 items-center gap-3 rounded-md border border-[#d1d5db] bg-white px-6 py-3 text-sm font-semibold text-[#202938] transition hover:border-[#d71920] hover:text-[#b9151b] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#d71920]">View Our Portfolio <span aria-hidden="true">↓</span></a>

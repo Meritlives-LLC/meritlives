@@ -36,7 +36,6 @@ const footerColumns = [
       ["Real Estate Technology", "/services/real-estate"],
       ["Business Automation", "/services/business-automation"],
       ["Security & Hardening", "/services/security"],
-      ["Maintenance & Development", "/services/ongoing-maintenance"],
     ],
   },
 

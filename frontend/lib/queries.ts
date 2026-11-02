@@ -58,9 +58,18 @@ export async function getBlogCategories() {
 }
 
 export async function getNewsCategories() {
-  return apiFetch<Paginated<Category>>("/categories?type=news&per_page=50", {
+  const first = await apiFetch<Paginated<Category>>("/categories?type=news&per_page=50", {
     cache: "no-store",
   });
+  const data = [...first.data];
+  const lastPage = first.meta?.last_page ?? 1;
+  for (let page = 2; page <= lastPage; page++) {
+    const next = await apiFetch<Paginated<Category>>(`/categories?type=news&per_page=50&page=${page}`, {
+      cache: "no-store",
+    });
+    data.push(...next.data);
+  }
+  return { ...first, data };
 }
 
 export async function getBlogPost(slug: string) {

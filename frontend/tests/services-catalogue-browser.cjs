@@ -4,7 +4,7 @@ const os = require('node:os');
 const path = require('node:path');
 const { chromium } = require('@playwright/test');
 const origin = 'http://127.0.0.1:3138';
-const hrefs = ['/services/web-development', '/services/fintech', '/services/EdTech', '/services/business-automation', '/services/Education', '/services/real-estate', '/services/security', '/services/ongoing-maintenance'];
+const hrefs = ['/services/web-development', '/services/fintech', '/services/EdTech', '/services/business-automation', '/services/Education', '/services/real-estate', '/services/security'];
 (async () => {
   const browser = await chromium.launch({ channel: 'chrome', headless: true });
   const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'meritlives-services-'));
@@ -24,7 +24,7 @@ const hrefs = ['/services/web-development', '/services/fintech', '/services/EdTe
       for (const href of hrefs) assert.equal(await page.locator(`main a[href="${href}"]`).count(), 1);
       assert.equal(await page.locator('main a[href="/contact"]').count(), 1);
       await page.locator('main img').evaluateAll(images => Promise.all(images.map(image => { image.loading = 'eager'; return image.decode(); })));
-      assert.ok(await page.locator('main img').evaluateAll(images => images.length === 8 && images.every(image => image.naturalWidth > 0)));
+      assert.ok(await page.locator('main img').evaluateAll(images => images.length === 7 && images.every(image => image.naturalWidth > 0)));
       assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), `No overflow at ${width}`);
       const sections = page.locator('section[data-service]');
       for (let index = 0; index < 4; index++) {
@@ -42,12 +42,12 @@ const hrefs = ['/services/web-development', '/services/fintech', '/services/EdTe
       await page.evaluate(() => window.scrollTo(0, 0));
       assert.deepEqual(errors, []);
       await page.screenshot({ path: path.join(directory, `services-${width}.png`), fullPage: true });
-      console.log(`PASS ${width}px: eight links, images, layout, grid, focus, no overflow or browser errors`);
+      console.log(`PASS ${width}px: seven links, images, layout, grid, focus, no overflow or browser errors`);
       await context.close();
     }
     for (const href of hrefs) {
       const response = await fetch(origin + href);
-      const missing = href === '/services/ongoing-maintenance';
+      const missing = false;
       const body = await response.text();
       const expected = 200; // Next.js may stream a not-found boundary after HTTP headers.
       assert.equal(response.status, expected, href);

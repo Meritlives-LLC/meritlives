@@ -43,17 +43,17 @@ export const otherServices: readonly CatalogueService[] = [
   { slug: "education", href: "/services/Education", title: "Education & Portal Management", description: "Connect admissions, student records, results and institutional workflows through practical digital portals.", image: "/security/stakeholder-review.jpg", imageAlt: "Professionals taking part in a presentation around a conference table; illustrative stock photograph.", imagePosition: "center 66%", capabilities: [] },
   { slug: "real-estate", href: "/services/real-estate", title: "Real Estate Technology", description: "Bring property listings, management and operational workflows together through useful digital tools.", image: "/services/property-consultation.jpg", imageAlt: "A real estate professional discussing a property handover with another person; illustrative stock photograph.", capabilities: [] },
   { slug: "security", href: "/services/security", title: "Security Audit & Hardening", description: "Assess agreed application and infrastructure risks, prioritize findings and plan practical security improvements.", image: "/security/professional-review.jpg", imageAlt: "A professional reviewing work on a laptop at an office desk; illustrative stock photograph.", imagePosition: "center 45%", capabilities: [] },
-  { slug: "ongoing-maintenance", href: "/services/ongoing-maintenance", title: "Maintenance & Development", description: "Keep improving your platform with agreed maintenance, updates, technical support and feature development.", image: "/security/team-assessment.jpg", imageAlt: "Colleagues collaborating on a computer project at their desks; illustrative stock photograph.", capabilities: [] },
 ];
 
 const curatedSlugs = new Set([...featuredServices, ...otherServices].map(service => service.slug));
+const excludedSlugs = new Set(["ongoing-maintenance"]);
 
 export function additionalPublishedServices(services: readonly Service[], existing: readonly Service[] = []): Service[] {
   const result = [...existing];
   const seen = new Set(existing.map(service => service.slug.trim().toLowerCase()));
   for (const service of services) {
     const slug = service.slug?.trim().toLowerCase();
-    if (service.status !== "published" || !slug || curatedSlugs.has(slug) || seen.has(slug)) continue;
+    if (service.status !== "published" || !slug || curatedSlugs.has(slug) || excludedSlugs.has(slug) || seen.has(slug)) continue;
     seen.add(slug);
     result.push(service);
   }
